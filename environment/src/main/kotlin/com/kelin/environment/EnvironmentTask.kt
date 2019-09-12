@@ -1,15 +1,14 @@
 package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
-import com.android.build.gradle.options.StringOption
-import com.google.common.collect.ImmutableMap
+import com.android.builder.model.ClassField
+import com.android.ide.common.gradle.model.IdeClassField
+import com.android.ide.common.gradle.model.ModelCache
 import org.gradle.api.DefaultTask
+import org.gradle.api.Task
 import org.gradle.api.tasks.TaskAction
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
-import kotlin.reflect.full.IllegalCallableAccessException
 
 /**
  * **描述:** 用来配置环境的Task。
@@ -26,7 +25,7 @@ import kotlin.reflect.full.IllegalCallableAccessException
 open class EnvironmentTask : DefaultTask() {
 
     var release = false
-    var placeholderEnvironment = ""
+    var initEnvironment = ""
 
     var devVersionCode = -1
     var devVersionName = ""
@@ -49,7 +48,7 @@ open class EnvironmentTask : DefaultTask() {
         }
 
     val versionName: String
-        get(){
+        get() {
             val vn = if (release) {
                 releaseVersionName
             } else {
@@ -70,108 +69,100 @@ open class EnvironmentTask : DefaultTask() {
 
     @TaskAction
     fun publicEnvironment() {
-
-
-        project.configurations.forEach {
-            println(">>>>>>>>>>>>>>>>>-+-: ${it.name}:$it")
-            if (it is GradleVariantConfiguration) {
-                println("找到了太棒了————————————————————————————————————: ${it.name}:$it")
-            }
-        }
-        val properties = project.extensions.extraProperties.properties
-        properties["android.injected.version.code"] = 100
-        properties["android.injected.version.name"] = "1.0.0"
-        for ((key, value) in properties) {
-            println(">>>>>>>>>>>>>>>>>+$key:$value")
-        }
-        project.gradle.buildFinished { configureEnvironment() }
+        project.gradle.buildFinished { envGenerators.forEach { it.generate() } }
         releaseExt = project.extensions.findByName("releaseEnv") as EnvironmentExtension
         devExt = project.extensions.findByName("devEnv") as EnvironmentExtension
         testExt = project.extensions.findByName("testEnv") as EnvironmentExtension
         demoExt = project.extensions.findByName("demoEnv") as EnvironmentExtension
+        if (releaseExt.alias.isEmpty()) {
+            releaseExt.alias = "Release"
+        }
         if (release) {
-            placeholderEnvironment = "release"
+            initEnvironment = "release"
         }
         if (releaseExt.variables.isEmpty()) {
             throw IllegalArgumentException("you must have release environment, you need called the releaseEnv method!")
         } else {
             if (!release) {
                 devExt.mergeVariables(releaseExt.variables)
+                if (devExt.alias.isEmpty()) {
+                    devExt.alias = "Dev"
+                }
                 testExt.mergeVariables(releaseExt.variables)
+                if (testExt.alias.isEmpty()) {
+                    testExt.alias = "Test"
+                }
                 demoExt.mergeVariables(releaseExt.variables)
-            }
-        }
-    }
-
-    private fun configureEnvironment() {
-
-        val app = project.extensions.findByType<AppExtension>(AppExtension::class.java)?.applicationVariants
-        app?.all { variant ->
-            println("\n========Placeholder Environment-${variant.name}:")
-            when (placeholderEnvironment) {
-                "release" -> {
-                    releaseExt.variables
-                }
-                "dev" -> {
-                    devExt.variables
-                }
-                "test" -> {
-                    testExt.variables
-                }
-                "demo" -> {
-                    demoExt.variables
-                }
-                else -> {
-                    releaseExt.variables
-                }
-            }.forEach {
-                if (it.value.placeholder) {
-                    println("========${variant.name}: ${it.key} | ${it.value.value}")
-                    variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
+                if (demoExt.alias.isEmpty()) {
+                    demoExt.alias = "Demo"
                 }
             }
-            println("\n\n")
 
-            val buildConfig = variant.generateBuildConfigProvider.get()
-            generatedEnvConfig(
-                buildConfig.sourceOutputDir.absolutePath,
-                buildConfig.buildConfigPackageName,
-                placeholderEnvironment,
-                release,
-                variant.versionName ?: "",
-                releaseExt.variables,
-                devExt.variables,
-                testExt.variables,
-                demoExt.variables
-            )
+            val app = project.extensions.findByType<AppExtension>(AppExtension::class.java)?.applicationVariants
+            app?.all { variant ->
+                println("\nGenerate placeholder for ${variant.name} variant:\n")
+                when (initEnvironment) {
+                    "release" -> {
+                        releaseExt.variables
+                    }
+                    "dev" -> {
+                        devExt.variables
+                    }
+                    "test" -> {
+                        testExt.variables
+                    }
+                    "demo" -> {
+                        demoExt.variables
+                    }
+                    else -> {
+                        releaseExt.variables
+                    }
+                }.forEach {
+                    if (it.value.placeholder) {
+                        println("${it.key} | ${it.value.value}")
+                        variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
+                    }
+                }
+                println("\n\n")
+
+                val buildConfig = variant.generateBuildConfigProvider.get()
+                buildConfig.doFirst {
+                    buildConfig.items.add(object : ClassField {
+                        override fun getName(): String {
+                            return "IS_DEBUG"
+                        }
+
+                        override fun getAnnotations(): MutableSet<String> {
+                            return mutableSetOf()
+                        }
+
+                        override fun getType(): String {
+                            return "boolean"
+                        }
+
+                        override fun getValue(): String {
+                            return "Boolean.parseBoolean(\"${if (release) "false" else "true"}\")"
+                        }
+
+                        override fun getDocumentation(): String {
+                            return "Created by EnvironmentPlugin to indicate whether the current is or not Debug state."
+                        }
+                    })
+                }
+                envGenerators.add(
+                    GeneratedEnvConfig(
+                        buildConfig.sourceOutputDir.absolutePath,
+                        buildConfig.buildConfigPackageName,
+                        initEnvironment,
+                        release,
+                        variant.versionName ?: "",
+                        releaseExt,
+                        devExt,
+                        testExt,
+                        demoExt
+                    )
+                )
+            }
         }
-        envGenerators.forEach { it.generate() }
-    }
-
-
-    private fun generatedEnvConfig(
-        filePath: String,
-        packageName: String,
-        environment: String,
-        isRelease: Boolean,
-        version: String,
-        release: HashMap<String, Variable>,
-        dev: HashMap<String, Variable>,
-        test: HashMap<String, Variable>,
-        demo: HashMap<String, Variable>
-    ) {
-        envGenerators.add(
-            GeneratedEnvConfig(
-                filePath,
-                packageName,
-                environment,
-                isRelease,
-                version,
-                release,
-                dev,
-                test,
-                demo
-            )
-        )
     }
 }

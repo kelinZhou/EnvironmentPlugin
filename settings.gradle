@@ -1,1 +1,1 @@
-include ':app', ':environment', ':environmentgenerater'
+include ':app', ':environment'

@@ -1,15 +1,7 @@
 package com.kelin.environment
 
-import com.android.build.gradle.AppExtension
-import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.options.StringOption
-import com.google.common.collect.ImmutableMap
-import com.squareup.javapoet.*
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import java.io.File
-import java.lang.IllegalArgumentException
-import javax.lang.model.element.Modifier
 
 
 /**
@@ -28,7 +20,7 @@ class EnvironmentPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val envTask = project.tasks.create("environment", EnvironmentTask::class.java) {
             it.release = true
-            it.placeholderEnvironment = "release"
+            it.initEnvironment = "release"
             it.devVersionCode = -1
             it.devVersionName = ""
             it.releaseVersionCode = -1

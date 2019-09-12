@@ -3,6 +3,8 @@ package com.kelin.environment
 import com.squareup.javapoet.*
 import java.io.File
 import javax.lang.model.element.Modifier
+import com.squareup.javapoet.MethodSpec
+
 
 /**
  * **描述:** 制造环境的配置
@@ -19,142 +21,267 @@ class GeneratedEnvConfig(
     private val environment: String,
     private val isRelease: Boolean,
     private val version: String,
-    private val release: HashMap<String, Variable>,
-    private val dev: HashMap<String, Variable>,
-    private val test: HashMap<String, Variable>,
-    private val demo: HashMap<String, Variable>
+    private val release: EnvironmentExtension,
+    private val dev: EnvironmentExtension,
+    private val test: EnvironmentExtension,
+    private val demo: EnvironmentExtension
 ) {
 
     internal fun generate() {
-        val parameters = writeEnvironmentInterface(release, packageName, filePath)
+        val parameters = writeEnvironmentInterface(release.variables, packageName, filePath)
         val typeType = ClassName.get(packageName, CONFIG_NAME, "Type")
         val nameOf = MethodSpec.methodBuilder("nameOf")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
             .addParameter(String::class.java, "typeName")
             .returns(typeType)
             .addStatement(
-                "for (Type value : values()) {\n" +
-                        "    if (value.toString().toLowerCase().equals(typeName)) {\n" +
-                        "        return value;\n" +
-                        "    }\n" +
-                        "}\n" +
-                        "return RELEASE"
+                if (isRelease) {
+                    "return RELEASE"
+                } else {
+                    "if (typeName != null) {\n" +
+                            "    for (Type value : values()) {\n" +
+                            "        if (value.name().toLowerCase().equals(typeName.toLowerCase())) {\n" +
+                            "            return value;\n" +
+                            "        }\n" +
+                            "    }\n" +
+                            "}\n" +
+                            "return RELEASE"
+                }
             )
             .build()
 
-        val typeEnum = TypeSpec.enumBuilder("Type")
-            .addModifiers(Modifier.PUBLIC)
-            .addEnumConstant("RELEASE")
-            .apply {
-                if (!isRelease) {
-                    if (dev.isNotEmpty()) {
-                        addEnumConstant("DEV")
-                    }
-                    if (test.isNotEmpty()) {
-                        addEnumConstant("TEST")
-                    }
-                    if (demo.isNotEmpty()) {
-                        addEnumConstant("DEMO")
-                    }
-                }
-            }
-            .addMethod(nameOf)
-            .build()
-
         val environmentType = ClassName.get(packageName, ENVIRONMENT_NAME)
-        val environmentImplConstructor = MethodSpec.constructorBuilder()
-        parameters.forEach { environmentImplConstructor.addParameter(String::class.java, it) }
-        environmentImplConstructor.addStatement("super(${parameters.joinToString(", ")})")
+        val contextType = ClassName.get("android.content", "Context")
+        val applicationType = ClassName.get("android.app", "Application")
+
+
+
+
         val environmentImpl = TypeSpec.classBuilder("${ENVIRONMENT_NAME}Impl")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
             .superclass(environmentType)
-            .addMethod(environmentImplConstructor.build())
+            .addMethod(
+                MethodSpec.constructorBuilder()
+                    .apply {
+                        parameters.forEach { addParameter(String::class.java, it) }
+                    }
+                    .addStatement("super(${parameters.joinToString(", ")})")
+                    .build()
+            )
             .build()
 
-        val getEnvironment = MethodSpec.methodBuilder("getEnvironment")
-            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-            .addParameter(typeType, "type")
-            .addCode(getEnvironmentParameterFormat(isRelease, release, dev, test, demo))
-            .returns(environmentType)
-            .build()
 
         val configSpec = TypeSpec.classBuilder(CONFIG_NAME)
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addJavadoc("**Description:** configure the environment.(Automatically generated file. DO NOT MODIFY)。\n<p>\n**Version:** v $version\n")
-            .addType(typeEnum)
             .addField(
                 FieldSpec.builder(Boolean::class.java, "IS_RELEASE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                     .initializer("Boolean.parseBoolean(\"$isRelease\")")
                     .build()
             )
             .addField(
-                FieldSpec.builder(typeType, "PLACEHOLDER_ENVIRONMENT", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                FieldSpec.builder(typeType, "INIT_ENV", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                     .initializer("Type.nameOf(\"$environment\")")
                     .build()
             )
+            .apply {
+                addField(
+                    FieldSpec.builder(environmentType, "RELEASE_ENV", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                        .initializer("new EnvironmentImpl(${release.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                        .build()
+                )
+                if (!isRelease) {
+                    if (dev.variables.isNotEmpty()) {
+                        addField(
+                            FieldSpec.builder(
+                                environmentType,
+                                "DEV_ENV",
+                                Modifier.PRIVATE,
+                                Modifier.STATIC,
+                                Modifier.FINAL
+                            )
+                                .initializer("new EnvironmentImpl(${dev.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                                .build()
+                        )
+                    }
+                    if (test.variables.isNotEmpty()) {
+                        addField(
+                            FieldSpec.builder(
+                                environmentType,
+                                "TEST_ENV",
+                                Modifier.PRIVATE,
+                                Modifier.STATIC,
+                                Modifier.FINAL
+                            )
+                                .initializer("new EnvironmentImpl(${test.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                                .build()
+                        )
+                    }
+                    if (demo.variables.isNotEmpty()) {
+                        addField(
+                            FieldSpec.builder(
+                                environmentType,
+                                "DEMO_ENV",
+                                Modifier.PRIVATE,
+                                Modifier.STATIC,
+                                Modifier.FINAL
+                            )
+                                .initializer("new EnvironmentImpl(${demo.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                                .build()
+                        )
+                    }
+                    addField(
+                        FieldSpec.builder(contextType, "context", Modifier.PRIVATE, Modifier.STATIC)
+                            .build()
+                    )
+                }
+            }
             .addField(
-                FieldSpec.builder(typeType, "curEnvironment", Modifier.PUBLIC, Modifier.STATIC)
-                    .initializer("PLACEHOLDER_ENVIRONMENT")
+                FieldSpec.builder(typeType, "curEnvType", Modifier.PRIVATE, Modifier.STATIC)
+                    .apply {
+                        if (isRelease) {
+                            initializer("Type.RELEASE")
+                        }
+                    }
                     .build()
             )
-            .addMethod(getEnvironment)
+            .addMethod(
+                MethodSpec.constructorBuilder()
+                    .addStatement("throw new RuntimeException(\"EnvConfig can't be constructed\")")
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("init")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(applicationType, "app")
+                    .apply {
+                        if (!isRelease) {
+                            addStatement(getInitMethodCode(), ClassName.get("android.preference", "PreferenceManager"))
+                        }
+                    }
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("setEnvType")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(typeType, "type")
+                    .addCode(setEnvironmentMethodCode())
+                    .returns(Boolean::class.java)
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("getEnvType")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .returns(typeType)
+                    .addStatement("return curEnvType")
+                    .build()
+            )
+            .addMethod(
+                MethodSpec.methodBuilder("getEnv")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addCode(getEnvironmentMethodCode())
+                    .returns(environmentType)
+                    .build()
+            )
+            .addType(
+                TypeSpec.enumBuilder("Type")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addEnumConstant("RELEASE", TypeSpec.anonymousClassBuilder("\"${release.alias}\"").build())
+                    .apply {
+                        if (!isRelease) {
+                            if (dev.variables.isNotEmpty()) {
+                                addEnumConstant("DEV", TypeSpec.anonymousClassBuilder("\"${dev.alias}\"").build())
+                            }
+                            if (test.variables.isNotEmpty()) {
+                                addEnumConstant("TEST", TypeSpec.anonymousClassBuilder("\"${test.alias}\"").build())
+                            }
+                            if (demo.variables.isNotEmpty()) {
+                                addEnumConstant("DEMO", TypeSpec.anonymousClassBuilder("\"${demo.alias}\"").build())
+                            }
+                        }
+                    }
+                    .addField(String::class.java, "alias", Modifier.PUBLIC, Modifier.FINAL)
+                    .addMethod(
+                        MethodSpec.constructorBuilder()
+                            .addParameter(String::class.java, "alias")
+                            .addStatement("this.\$N = \$N", "alias", "alias")
+                            .build()
+                    )
+                    .addMethod(nameOf)
+                    .build()
+            )
             .addType(environmentImpl)
             .build()
 
 
-        JavaFile.builder(packageName, configSpec).build().writeTo(File(filePath))
+        JavaFile.builder(packageName, configSpec)
+            .build().writeTo(File(filePath))
     }
 
-    private fun getEnvironmentParameterFormat(
-        isRelease: Boolean,
-        release: HashMap<String, Variable>,
-        dev: HashMap<String, Variable>,
-        test: HashMap<String, Variable>,
-        demo: HashMap<String, Variable>
-    ): String {
+    private fun setEnvironmentMethodCode(): String {
+        return if (isRelease) {
+            return "return true;\n"
+        } else {
+            "if (type != curEnvType) {\n" +
+                    "    curEnvType = type;\n" +
+                    "   if (context != null) {\n" +
+                    "       PreferenceManager.getDefaultSharedPreferences(context).edit().putString(\"current_environment_type_string_name\", type.name()).apply();\n" +
+                    "   }\n" +
+                    "   return true;\n" +
+                    "} else {\n" +
+                    "   return false;\n" +
+                    "}\n"
+        }
+    }
+
+    private fun getInitMethodCode(): String {
+        return "context = app.getApplicationContext();\ncurEnvType = Type.nameOf(\$T.getDefaultSharedPreferences(context).getString(\"current_environment_type_string_name\", INIT_ENV.name()))"
+    }
+
+    private fun getEnvironmentMethodCode(): String {
         println("========Release Environment:")
-        release.forEach {
+        release.variables.forEach {
             println("========variable: ${it.key} | ${it.value.value}")
         }
         if (!isRelease) {
-            return "switch (curEnvironment) {\n" +
+            return "switch (curEnvType) {\n" +
                     "    case RELEASE:\n" +
-                    "        return new EnvironmentImpl(${release.values.joinToString(", ") { "\"${it.value}\"" }});\n" +
-                    if (dev.isNotEmpty()) {
+                    "        return RELEASE_ENV;\n" +
+                    if (dev.variables.isNotEmpty()) {
                         println("========Dev Environment:")
-                        dev.forEach {
+                        dev.variables.forEach {
                             println("========variable: ${it.key} | ${it.value.value}")
                         }
                         "    case DEV:\n" +
-                                "        return new EnvironmentImpl(${dev.values.joinToString(", ") { "\"${it.value}\"" }});\n"
+                                "        return DEV_ENV;\n"
                     } else {
                         ""
                     } +
-                    if (test.isNotEmpty()) {
+                    if (test.variables.isNotEmpty()) {
                         println("========Test Environment:")
-                        test.forEach {
+                        test.variables.forEach {
                             println("========variable: ${it.key} | ${it.value.value}")
                         }
                         "    case TEST:\n" +
-                                "        return new EnvironmentImpl(${test.values.joinToString(", ") { "\"${it.value}\"" }});\n"
+                                "        return TEST_ENV;\n"
                     } else {
                         ""
                     } +
-                    if (demo.isNotEmpty()) {
+                    if (demo.variables.isNotEmpty()) {
                         println("========Demo Environment:")
-                        demo.forEach {
+                        demo.variables.forEach {
                             println("========variable: ${it.key} | ${it.value.value}")
                         }
                         "    case DEMO:\n" +
-                                "        return new EnvironmentImpl(${demo.values.joinToString(", ") { "\"${it.value}\"" }});\n"
+                                "        return DEMO_ENV;\n"
                     } else {
                         ""
                     } +
                     "    default:\n" +
-                    "        throw new RuntimeException(\"the type:\" + type.toString() + \" is unkonwn !\");\n" +
+                    "        throw new RuntimeException(\"the type:\" + curEnvType.toString() + \" is unkonwn !\");\n" +
                     "}"
         } else {
-            return "return new EnvironmentImpl(${release.values.joinToString(", ") { "\"${it.value}\"" }});\n"
+            return "return RELEASE_ENV;\n"
         }
     }
 

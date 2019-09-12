@@ -13,11 +13,13 @@ open class EnvironmentExtension {
 
     val variables = HashMap<String, Variable>()
 
-    fun createVariable(name: String, value: String) {
-        createVariable(name, value, false)
+    var alias = ""
+
+    fun variable(name: String, value: String) {
+        variable(name, value, false)
     }
 
-    fun createVariable(name: String, value: String, placeholder: Boolean) {
+    fun variable(name: String, value: String, placeholder: Boolean) {
         variables[name] = Variable(value, placeholder)
     }
 
