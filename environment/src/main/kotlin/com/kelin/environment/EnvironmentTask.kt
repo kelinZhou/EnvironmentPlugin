@@ -2,13 +2,11 @@ package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
 import com.android.builder.model.ClassField
-import com.android.ide.common.gradle.model.IdeClassField
-import com.android.ide.common.gradle.model.ModelCache
 import org.gradle.api.DefaultTask
-import org.gradle.api.Task
 import org.gradle.api.tasks.TaskAction
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
+import java.util.regex.Pattern
 
 /**
  * **描述:** 用来配置环境的Task。
@@ -67,8 +65,25 @@ open class EnvironmentTask : DefaultTask() {
     private lateinit var testExt: EnvironmentExtension
     private lateinit var demoExt: EnvironmentExtension
 
+    private fun getCurrentVariant(): Array<String> {
+        val tskReqStr = project.gradle.startParameter.taskRequests.toString()
+        val pattern = if (tskReqStr.contains("assemble"))
+            Pattern.compile("assemble(\\w+)(Release|Debug)")
+        else
+            Pattern.compile("generate(\\w+)(Release|Debug)")
+
+        val matcher = pattern.matcher(tskReqStr)
+
+        return if (matcher.find()) {
+            arrayOf(matcher.group(1), matcher.group(2))
+        } else {
+            arrayOf("", if (tskReqStr.contains("release")) "release" else "debug")
+        }
+    }
+
     @TaskAction
     fun publicEnvironment() {
+
         project.gradle.buildFinished { envGenerators.forEach { it.generate() } }
         releaseExt = project.extensions.findByName("releaseEnv") as EnvironmentExtension
         devExt = project.extensions.findByName("devEnv") as EnvironmentExtension
@@ -98,70 +113,79 @@ open class EnvironmentTask : DefaultTask() {
                 }
             }
 
-            val app = project.extensions.findByType<AppExtension>(AppExtension::class.java)?.applicationVariants
+            val appExt = project.extensions.findByType<AppExtension>(AppExtension::class.java)
+            val app = appExt?.applicationVariants
+
+            val info = getCurrentVariant()
+            val channel = info[0]
+            val type = info[1]
+
             app?.all { variant ->
-                println("\nGenerate placeholder for ${variant.name} variant:\n")
-                when (initEnvironment) {
-                    "release" -> {
-                        releaseExt.variables
-                    }
-                    "dev" -> {
-                        devExt.variables
-                    }
-                    "test" -> {
-                        testExt.variables
-                    }
-                    "demo" -> {
-                        demoExt.variables
-                    }
-                    else -> {
-                        releaseExt.variables
-                    }
-                }.forEach {
-                    if (it.value.placeholder) {
-                        println("${it.key} | ${it.value.value}")
-                        variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
-                    }
-                }
-                println("\n\n")
-
-                val buildConfig = variant.generateBuildConfigProvider.get()
-                buildConfig.doFirst {
-                    buildConfig.items.add(object : ClassField {
-                        override fun getName(): String {
-                            return "IS_DEBUG"
+                println("${"$channel$type".toLowerCase()}<<<<<<<>>>>>${variant.name.toLowerCase()}")
+                if ("$channel$type".toLowerCase() == variant.name.toLowerCase()) {
+                    println("\nGenerate placeholder for ${variant.name} variant:\n")
+                    when (initEnvironment) {
+                        "release" -> {
+                            releaseExt.variables
                         }
-
-                        override fun getAnnotations(): MutableSet<String> {
-                            return mutableSetOf()
+                        "dev" -> {
+                            devExt.variables
                         }
-
-                        override fun getType(): String {
-                            return "boolean"
+                        "test" -> {
+                            testExt.variables
                         }
-
-                        override fun getValue(): String {
-                            return "Boolean.parseBoolean(\"${if (release) "false" else "true"}\")"
+                        "demo" -> {
+                            demoExt.variables
                         }
-
-                        override fun getDocumentation(): String {
-                            return "Created by EnvironmentPlugin to indicate whether the current is or not Debug state."
+                        else -> {
+                            releaseExt.variables
                         }
-                    })
-                }
-                envGenerators.add(
-                    GeneratedEnvConfig(
-                        buildConfig.sourceOutputDir.absolutePath,
-                        buildConfig.buildConfigPackageName,
-                        initEnvironment,
-                        release,
-                        variant.versionName ?: "",
-                        releaseExt,
-                        devExt,
-                        testExt,
-                        demoExt
+                    }.forEach {
+                        if (it.value.placeholder) {
+                            println("${it.key} | ${it.value.value}")
+                            variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
+                        }
+                    }
+                    println("\n\n")
+
+                    val buildConfig = variant.generateBuildConfigProvider.get()
+                    buildConfig.doFirst {
+                        buildConfig.items.add(object : ClassField {
+                            override fun getName(): String {
+                                return "IS_DEBUG"
+                            }
+
+                            override fun getAnnotations(): MutableSet<String> {
+                                return mutableSetOf()
+                            }
+
+                            override fun getType(): String {
+                                return "boolean"
+                            }
+
+                            override fun getValue(): String {
+                                return "Boolean.parseBoolean(\"${if (release) "false" else "true"}\")"
+                            }
+
+                            override fun getDocumentation(): String {
+                                return "Created by EnvironmentPlugin to indicate whether the current is or not Debug state."
+                            }
+                        })
+                    }
+                    envGenerators.add(
+                        GeneratedEnvConfig(
+                            buildConfig.sourceOutputDir.absolutePath,
+                            buildConfig.buildConfigPackageName,
+                            initEnvironment,
+                            release,
+                            variant.versionName ?: "",
+                            releaseExt,
+                            devExt,
+                            testExt,
+                            demoExt
+                        )
                     )
-                )
+                }
             }
         }
     }

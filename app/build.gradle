@@ -63,7 +63,7 @@ android {
     defaultConfig {
         versionCode environment.versionCode
         versionName environment.versionName
-        applicationId "com.kelin.environmenttoolsdemo"
+        applicationId packageName
         minSdkVersion 14
         targetSdkVersion 28
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -75,10 +75,24 @@ android {
         }
     }
 
-
+    //支持多渠道配置。
+    flavorDimensions "default"
+    productFlavors {
+        for (channel in file('./channels')) {
+            if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
+                "$channel" {
+                    //JPush的固定字段
+                    manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
+                    buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
+                    dimension "default"
+                }
+                if (!environment.release) {
+                    break
+                }
+            }
+        }
+    }
 }
-
-
 
 
 dependencies {

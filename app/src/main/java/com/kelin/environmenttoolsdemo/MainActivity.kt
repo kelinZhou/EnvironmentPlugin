@@ -8,8 +8,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        BuildConfig.APPLICATION_ID
-        val env = EnvConfig.getEnvironment(EnvConfig.Type.RELEASE)
+        val env = EnvConfig.getEnv()
         env.GRPC_API_HOST
         env.FILE_HOST
         env.J_PUSH_APP_KEY
