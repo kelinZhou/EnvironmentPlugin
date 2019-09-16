@@ -6,7 +6,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
-import java.util.regex.Pattern
 
 /**
  * **描述:** 用来配置环境的Task。
@@ -66,25 +65,40 @@ open class EnvironmentTask : DefaultTask() {
     private lateinit var demoExt: EnvironmentExtension
 
     private fun getCurrentVariant(): Array<String> {
-        val tskReqStr = project.gradle.startParameter.taskRequests.toString()
-        val pattern = if (tskReqStr.contains("assemble"))
-            Pattern.compile("assemble(\\w+)(Release|Debug)")
-        else
-            Pattern.compile("generate(\\w+)(Release|Debug)")
-
-        val matcher = pattern.matcher(tskReqStr)
-
-        return if (matcher.find()) {
-            arrayOf(matcher.group(1), matcher.group(2))
+        val taskRequests = project.gradle.startParameter.taskRequests
+        val tskReqStr = taskRequests.toString()
+        println("startParameter:$tskReqStr")
+        var start = tskReqStr.indexOf("app:generate")
+        val channel = if (start > 0) {
+            var end = tskReqStr.indexOf("ReleaseSources", start)
+            end = if (end > 0) end else tskReqStr.indexOf("DebugSources", start)
+            if (end > 0) {
+                tskReqStr.substring(start + 12, end).toLowerCase()
+            } else {
+                ""
+            }
         } else {
-            arrayOf("", if (tskReqStr.contains("release")) "release" else "debug")
+            start = tskReqStr.indexOf("app:assemble")
+            if (start > 0) {
+                var end = tskReqStr.indexOf("Release", start)
+                end = if (end > 0) end else tskReqStr.indexOf("Debug", start)
+                if (end > 0) {
+                    tskReqStr.substring(start + 12, end).toLowerCase()
+                } else {
+                    ""
+                }
+            } else {
+                ""
+            }
         }
+        return arrayOf(
+            channel,
+            if (tskReqStr.toLowerCase().contains("release") || tskReqStr.contains("aR")) "release" else "debug"
+        )
     }
 
     @TaskAction
     fun publicEnvironment() {
-
-        project.gradle.buildFinished { envGenerators.forEach { it.generate() } }
         releaseExt = project.extensions.findByName("releaseEnv") as EnvironmentExtension
         devExt = project.extensions.findByName("devEnv") as EnvironmentExtension
         testExt = project.extensions.findByName("testEnv") as EnvironmentExtension
@@ -119,10 +133,10 @@ open class EnvironmentTask : DefaultTask() {
             val info = getCurrentVariant()
             val channel = info[0]
             val type = info[1]
-
+            println("Channel:${if (channel.isEmpty()) "unknown" else channel}")
+            println("BuildType:$type")
             app?.all { variant ->
-                println("${"$channel$type".toLowerCase()}<<<<<<<>>>>>${variant.name.toLowerCase()}")
-                if ("$channel$type".toLowerCase() == variant.name.toLowerCase()) {
+                if (variant.name.toLowerCase().contains("$channel$type")) {
                     println("\nGenerate placeholder for ${variant.name} variant:\n")
                     when (initEnvironment) {
                         "release" -> {
@@ -185,6 +199,7 @@ open class EnvironmentTask : DefaultTask() {
                             demoExt
                         )
                     )
+                    buildConfig.doLast { envGenerators.forEach { it.generate() } }
                 }
             }
         }
