@@ -1,4 +1,6 @@
-package com.kelin.environment
+package com.kelin.environment.extension
+
+import com.kelin.environment.Variable
 
 /**
  * **描述:** 环境配置的基类。

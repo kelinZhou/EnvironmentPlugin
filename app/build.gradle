@@ -13,15 +13,21 @@ environment {
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
     initEnvironment "test"
 
-    //当release的值为false时environment.versionCode的值为该值。
-    devVersionCode 1
-    //当release的值为false时environment.versionName的值为该值。
-    devVersionName "1.0.0"
+    //当release的值为false时的包配置。
+    devConfig {
+        appIcon "@mipmap/ic_launcher"
+        appName "环境插件"
+//        versionCode 1
+        versionName "1.0.0"
+    }
 
-    //当release的值为true时environment.versionCode的值为该值。
-    releaseVersionCode 2
-    //当release的值为true时environment.versionName的值为该值。
-    releaseVersionName "2.0.0"
+    //当release的值为true时的包配置。
+    releaseConfig {
+        appIcon "@mipmap/ic_android"
+        appName "@string/app_name"
+//        versionCode 1
+        versionName "2.0.0"
+    }
 
     releaseEnv {
         alias "生产"
@@ -68,6 +74,26 @@ android {
         targetSdkVersion 28
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    android.applicationVariants.all {
+        def flavors = it.productFlavors
+        def channel = flavors.isEmpty() ? "" : flavors[0].name.split("-")[0] + "_"
+        //获取当前时间的"YYYY-MM-dd"格式。assembleRelease
+        def createTime = new Date().format("YYYY-MM-dd_HHmm", TimeZone.getTimeZone("GMT+08:00"))
+        def buildType = it.buildType.name
+        if (buildType == "release") {
+            it.getPackageApplicationProvider().get().outputDirectory = new File(project.rootDir.absolutePath + "/apks/${it.applicationId}/${createTime}")
+        }
+        it.outputs.all {
+            if (it.outputFile != null && 'release' == buildType) {
+                if (it.outputFile.name.endsWith(".apk")) {
+                    //重新对apk命名。
+                    it.outputFileName = "${channel}EnvPlugin_v${versionName}_${createTime}-release.apk"
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

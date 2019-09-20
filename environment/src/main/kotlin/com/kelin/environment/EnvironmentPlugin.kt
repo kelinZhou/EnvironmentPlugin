@@ -1,5 +1,7 @@
 package com.kelin.environment
 
+import com.kelin.environment.extension.EnvironmentExtension
+import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -21,13 +23,12 @@ class EnvironmentPlugin : Plugin<Project> {
         val envTask = project.tasks.create("environment", EnvironmentTask::class.java) {
             it.release = true
             it.initEnvironment = "release"
-            it.devVersionCode = -1
-            it.devVersionName = ""
-            it.releaseVersionCode = -1
-            it.releaseVersionName = ""
         }
 
         project.tasks.findByName("preBuild")?.dependsOn(envTask)
+
+        project.extensions.create("devConfig", PackageConfigExtension::class.java)
+        project.extensions.create("releaseConfig", PackageConfigExtension::class.java)
 
         project.extensions.create("releaseEnv", EnvironmentExtension::class.java)
         project.extensions.create("devEnv", EnvironmentExtension::class.java)

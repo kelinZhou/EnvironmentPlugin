@@ -2,6 +2,8 @@ package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
 import com.android.builder.model.ClassField
+import com.kelin.environment.extension.EnvironmentExtension
+import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.lang.IllegalArgumentException
@@ -24,45 +26,57 @@ open class EnvironmentTask : DefaultTask() {
     var release = false
     var initEnvironment = ""
 
-    var devVersionCode = -1
-    var devVersionName = ""
-    var releaseVersionCode = -1
-    var releaseVersionName = ""
+    private val envGenerators = ArrayList<GeneratedEnvConfig>()
+    private val releaseExt by lazy { project.extensions.findByName("releaseEnv") as EnvironmentExtension }
+    private val devExt by lazy { project.extensions.findByName("devEnv") as EnvironmentExtension }
+    private val testExt by lazy { project.extensions.findByName("testEnv") as EnvironmentExtension }
+    private val demoExt by lazy { project.extensions.findByName("demoEnv") as EnvironmentExtension }
 
+    private val config by lazy {
+        if (release) {
+            project.extensions.findByName("releaseConfig") as PackageConfigExtension
+        } else {
+            project.extensions.findByName("devConfig") as PackageConfigExtension
+        }
+    }
 
     val versionCode: Int
         get() {
-            val vc = if (release) {
-                releaseVersionCode
-            } else {
-                devVersionCode
-            }
-            if (vc != -1) {
-                return vc
-            } else {
-                throw RuntimeException("you need set the devVersionCode's value and the releaseVersionName's value.")
+            return when {
+                config.versionCode != -1 -> return config.versionCode
+                config.versionName.isNotEmpty() -> if (config.versionName.split(".").any { it.length > 1 }) {
+                    throw RuntimeException("versionName:${config.versionName} does not support. your versionName must be in format X.X.X, such as 1.0.0.")
+                } else {
+                    try {
+                        config.versionName.replace(".", "").trim().toInt()
+                    } catch (e: Exception) {
+                        throw RuntimeException("You need set the versionCode's value for ${if (release) "releaseConfig" else "devConfig"}.")
+                    }
+                }
+                else -> throw RuntimeException("You need set the versionCode's value for ${if (release) "releaseConfig" else "devConfig"}.")
             }
         }
 
     val versionName: String
         get() {
-            val vn = if (release) {
-                releaseVersionName
-            } else {
-                devVersionName
-            }
-            if (vn.isNotEmpty()) {
-                return vn
-            } else {
-                throw RuntimeException("you need set the devVersionName's value and the releaseVersionCode's value.")
+            return when {
+                config.versionName.isNotEmpty() -> config.versionName
+                config.versionCode != -1 -> {
+                    val codeStr = config.versionCode.toString()
+                    if (codeStr.length > 3) {
+                        throw RuntimeException("versionCode:${config.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
+                    } else {
+                        when (codeStr.length) {
+                            1 -> "0.0.$codeStr"
+                            2 -> "0.${codeStr.toCharArray().joinToString(".")}"
+                            3 -> codeStr.toCharArray().joinToString(".")
+                            else -> throw RuntimeException("versionCode:${config.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
+                        }
+                    }
+                }
+                else -> throw RuntimeException("You need set the versionName's value for ${if (release) "releaseConfig" else "devConfig"}.")
             }
         }
-
-    private val envGenerators = ArrayList<GeneratedEnvConfig>()
-    private lateinit var releaseExt: EnvironmentExtension
-    private lateinit var devExt: EnvironmentExtension
-    private lateinit var testExt: EnvironmentExtension
-    private lateinit var demoExt: EnvironmentExtension
 
     private fun getCurrentVariant(): Array<String> {
         val taskRequests = project.gradle.startParameter.taskRequests
@@ -99,10 +113,6 @@ open class EnvironmentTask : DefaultTask() {
 
     @TaskAction
     fun publicEnvironment() {
-        releaseExt = project.extensions.findByName("releaseEnv") as EnvironmentExtension
-        devExt = project.extensions.findByName("devEnv") as EnvironmentExtension
-        testExt = project.extensions.findByName("testEnv") as EnvironmentExtension
-        demoExt = project.extensions.findByName("demoEnv") as EnvironmentExtension
         if (releaseExt.alias.isEmpty()) {
             releaseExt.alias = "Release"
         }
@@ -137,7 +147,7 @@ open class EnvironmentTask : DefaultTask() {
             println("BuildType:$type")
             app?.all { variant ->
                 if (variant.name.toLowerCase().contains("$channel$type")) {
-                    println("\nGenerate placeholder for ${variant.name} variant:\n")
+                    println("\nGenerate placeholder for ${variant.name}:\n")
                     when (initEnvironment) {
                         "release" -> {
                             releaseExt.variables
@@ -158,6 +168,12 @@ open class EnvironmentTask : DefaultTask() {
                         if (it.value.placeholder) {
                             println("${it.key} | ${it.value.value}")
                             variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
+                        }
+                        if (config.appIcon.isNotEmpty()) {
+                            variant.mergedFlavor.manifestPlaceholders["appIcon"] = config.appIcon
+                        }
+                        if (config.appName.isNotEmpty()) {
+                            variant.mergedFlavor.manifestPlaceholders["appName"] = config.appName
                         }
                     }
                     println("\n\n")
