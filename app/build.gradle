@@ -6,8 +6,9 @@ apply plugin: 'kotlin-android-extensions'
 
 apply plugin: "com.kelin.environment"
 
+
 environment {
-    //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏
+    //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
     release false
 
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
@@ -32,34 +33,25 @@ environment {
     releaseEnv {
         alias "生产"
 
-        variable "FILE_HOST", "https://file.lieluobo.com/"
-        variable "GRPC_API_HOST", "api.lieluobo.com"
-        variable "GRPC_API_PORT", "8443", true
-        variable "OVERRIDE_AUTHORITY", "fett-api.lieluobo.com"
-        variable "WEB_WEBSITE_PATH", "登录  s.lieluobo.com  并扫码", true
-        variable "UM_APP_KEY", '5d2ec9f23fc195d3e000101c', true
-        variable "WX_APP_ID", "wxc67742e80ede84bd"
-        variable "WX_APP_SECRET", "9d98dbea78a98673e0ab1dcdcd99c82e"
-        variable "J_PUSH_APP_KEY", "f75dcb203bf9ce802b0ecbb2"
-        variable "TC_USER_ACTION_ID", "1109757651"
-        variable "TC_APP_SECRET_KEY", "9150b5a1a133e03eb35cd3324094b7a4"
+        variable "API_HOST", "192.168.31.24"
+        variable "API_PORT", "8443"
+        variable "UM_APP_KEY", '7c2ed9f7f1d5e10131d', true
+        variable "WX_APP_ID", "wxc23iadfaioaiuu0a"
+        variable "WX_APP_SECRET", "ioa9ad9887ad98ay979ad86"
     }
 
     testEnv {
         alias "测试"
 
-        variable "FILE_HOST", "http://file.testing.lieluobo.net/"
-        variable "GRPC_API_HOST", "fett-api.lieluobo.testing"
-        variable "OVERRIDE_AUTHORITY", ""
+        variable "API_HOST", "192.168.36.18"
+        variable "UM_APP_KEY", '7c2ed9f7f1d5eewiai', true
     }
 
     demoEnv {
         alias "预发"
 
-        variable "FILE_HOST", "https://file.demo.lieluobo.com/"
-        variable "GRPC_API_HOST", "api.demo.lieluobo.com"
-        variable "GRPC_API_PORT", "4927"
-        variable "OVERRIDE_AUTHORITY", ""
+        variable "API_HOST", "192.168.36.18"
+        variable "UM_APP_KEY", '7c2ed9f7f1d5eewiai', true
     }
 }
 

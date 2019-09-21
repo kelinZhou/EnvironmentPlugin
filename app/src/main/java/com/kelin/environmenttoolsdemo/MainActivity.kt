@@ -9,9 +9,5 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         val env = EnvConfig.getEnv()
-        env.GRPC_API_HOST
-        env.FILE_HOST
-        env.J_PUSH_APP_KEY
-        env.TC_APP_SECRET_KEY
     }
 }
