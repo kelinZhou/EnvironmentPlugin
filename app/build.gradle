@@ -16,18 +16,22 @@ environment {
 
     //当release的值为false时的包配置。
     devConfig {
-        appIcon "@mipmap/ic_launcher"
-        appName "环境插件"
-//        versionCode 1
+        appIcon "@mipmap/ic_android"
+        appRoundIcon "@mipmap/ic_android"
+        appName "EnvPlugin"
+//        versionCode 100
         versionName "1.0.0"
+        applicationId "${packageName}.test"
     }
 
     //当release的值为true时的包配置。
     releaseConfig {
-        appIcon "@mipmap/ic_android"
+        appIcon "@mipmap/ic_launcher"
+        appRoundIcon "@mipmap/ic_launcher"
         appName "@string/app_name"
-//        versionCode 1
+//        versionCode 200
         versionName "2.0.0"
+        applicationId packageName
     }
 
     releaseEnv {
@@ -35,23 +39,33 @@ environment {
 
         variable "API_HOST", "192.168.31.24"
         variable "API_PORT", "8443"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5e10131d', true
+        variable "UM_APP_KEY", '7c2ed9f7f1d5ecccc', true
         variable "WX_APP_ID", "wxc23iadfaioaiuu0a"
         variable "WX_APP_SECRET", "ioa9ad9887ad98ay979ad86"
+    }
+
+    devEnv {
+        alias "开发"
+
+        variable "API_HOST", "192.168.30.11"
+        variable "API_PORT", "8016"
+        variable "UM_APP_KEY", '7c2ed9f7f1d5eefff', true
     }
 
     testEnv {
         alias "测试"
 
         variable "API_HOST", "192.168.36.18"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5eewiai', true
+        variable "API_PORT", "8001"
+        variable "UM_APP_KEY", '7c2ed9f7f1d5eebbb', true
     }
 
     demoEnv {
         alias "预发"
 
-        variable "API_HOST", "192.168.36.18"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5eewiai', true
+        variable "API_HOST", "192.168.36.10"
+        variable "API_PORT", "8109"
+        variable "UM_APP_KEY", '7c2ed9f7f1d5eeaaa', true
     }
 }
 
@@ -61,7 +75,7 @@ android {
     defaultConfig {
         versionCode environment.versionCode
         versionName environment.versionName
-        applicationId packageName
+        applicationId environment.applicationId
         minSdkVersion 14
         targetSdkVersion 28
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

@@ -78,6 +78,14 @@ open class EnvironmentTask : DefaultTask() {
             }
         }
 
+    val applicationId:String
+    get() {
+        return when {
+            config.applicationId.isNotEmpty() -> config.applicationId
+            else -> throw RuntimeException("You need set the versionName's value for ${if (release) "releaseConfig" else "devConfig"}.")
+        }
+    }
+
     private fun getCurrentVariant(): Array<String> {
         val taskRequests = project.gradle.startParameter.taskRequests
         val tskReqStr = taskRequests.toString()
@@ -170,10 +178,13 @@ open class EnvironmentTask : DefaultTask() {
                             variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
                         }
                         if (config.appIcon.isNotEmpty()) {
-                            variant.mergedFlavor.manifestPlaceholders["appIcon"] = config.appIcon
+                            variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
+                        }
+                        if (config.appRoundIcon.isNotEmpty()) {
+                            variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] = config.appRoundIcon
                         }
                         if (config.appName.isNotEmpty()) {
-                            variant.mergedFlavor.manifestPlaceholders["appName"] = config.appName
+                            variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
                         }
                     }
                     println("\n\n")

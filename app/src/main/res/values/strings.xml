@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">EnvPlugin</string>
+    <string name="app_name">环境插件</string>
+    <string name="release">生产</string>
+    <string name="dev">开发</string>
+    <string name="test">测试</string>
+    <string name="demo">预发</string>
 </resources>

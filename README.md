@@ -3,40 +3,40 @@
 * * *
 
 ## 简介
-在gradle中配置可开发时的所有环境，你只需要很少的代码就能实现环境动态切换的功能。而在打生产包时你只需要在
+在gradle中配置开发时的所有环境，你只需要很少的代码就能实现环境动态切换的功能。而在打生产包时你只需要在
 gradle中做非常少的变动就能将非生产环境剔除，从而保证非生产环境不会泄漏。
 在gradle中配置完成后只需要clean一下就会在buildConfig的目录中生成一个EnvConfig的类，你只需要通过
-EnvConfig.getEnf()方法就能获取到所有你在gradlew中配置的值，而此时你不需要关心自己当前处于哪个环境。
+EnvConfig.getEnv()方法就能获取到所有你在gradlew中配置的值，而此时你不需要关心自己当前处于哪个环境。
 切换环境时你只需要调用EnvConfig.setEnv(Type type)方法切换当前环境即可。
 
 
 ## 体验
-[点击下载](https://fir.im/35wq)或扫码下载DemoApk
+[点击下载](https://fir.im/fwqn)或扫码下载DemoApk
 
 ![DemoApk](materials/apk_download.png)
 
 ## 下载
 ###### 第一步：添加 gradlew plugins 仓库到你项目根目录的 gradle 文件中。
-```
+```groovy
 buildscript {
   repositories {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
-    classpath "gradle.plugin.com.kelin.environment:environment:1.1.0"
+    classpath "gradle.plugin.com.kelin.environment:environment:1.1.2"
   }
 }
 ```
 ###### 第二步：在module中引入插件。
-```
+```groovy
 apply plugin: "com.kelin.environment"
 ```
 
 ## 效果图
-TODO 后续添加
+![效果图](materials/env_plugin_demo.png)
 
 ## 使用
-#### 在module添加如下配置。
+#### 在App gradle中添加如下配置。
 ```groovy
 environment {
     //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
@@ -84,6 +84,10 @@ environment {
         variable "API_HOST", "192.168.36.18"
         variable "UM_APP_KEY", '7c2ed9f7f1d5eewiai', true
     }
+}
+
+android{
+    //...省略N多行代码
 }
 ```
 #### 然后clean一下项目。

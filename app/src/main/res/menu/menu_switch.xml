@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools">
+    <group android:id="@+id/menu_group">
+        <item android:id="@+id/menu_release"
+              tools:title="@string/release"
+              android:visible="false"
+              tools:visible="true"/>
+        <item android:id="@+id/menu_dev"
+              tools:title="@string/dev"
+              android:visible="false"
+              tools:visible="true"/>
+        <item android:id="@+id/menu_test"
+              tools:title="@string/test"
+              android:visible="false"
+              tools:visible="true"/>
+        <item android:id="@+id/menu_demo"
+              tools:title="@string/demo"
+              android:visible="false"
+              tools:visible="true"/>
+    </group>
+</menu>

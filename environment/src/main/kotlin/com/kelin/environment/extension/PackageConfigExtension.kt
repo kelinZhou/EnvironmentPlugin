@@ -11,12 +11,18 @@ package com.kelin.environment.extension
  */
 open class PackageConfigExtension {
     internal var appIcon = ""
+    internal var appRoundIcon = ""
     internal var appName = ""
     internal var versionCode = -1
     internal var versionName = ""
+    internal var applicationId = ""
 
     fun appIcon(appIcon: String) {
         this.appIcon = appIcon
+    }
+
+    fun appRoundIcon(appRoundIcon: String) {
+        this.appRoundIcon = appRoundIcon
     }
 
     fun appName(appName: String) {
@@ -29,5 +35,9 @@ open class PackageConfigExtension {
 
     fun versionName(versionName: String) {
         this.versionName = versionName
+    }
+
+    fun applicationId(applicationId: String) {
+        this.applicationId = applicationId
     }
 }
