@@ -3,11 +3,7 @@
 * * *
 
 ## 简介
-在gradle中配置开发时的所有环境，你只需要很少的代码就能实现环境动态切换的功能。而在打生产包时你只需要在
-gradle中做非常少的变动就能将非生产环境剔除，从而保证非生产环境不会泄漏。
-在gradle中配置完成后只需要clean一下就会在buildConfig的目录中生成一个EnvConfig的类，你只需要通过
-EnvConfig.getEnv()方法就能获取到所有你在gradlew中配置的值，而此时你不需要关心自己当前处于哪个环境。
-切换环境时你只需要调用EnvConfig.setEnv(Type type)方法切换当前环境即可。
+在`gradle`中配置开发时的所有环境，你只需要很少的代码就能实现环境动态切换的功能。而在打生产包时你只需要在`gradle`中修改`release`的值为`true`就能将非生产环境剔除(不会将非生产环境打包到Apk中)，从而保证非生产环境不会泄漏。在`gradle`中配置完成后只需要clean一下就会在`BuildConfig`的目录中生成一个`EnvConfig`的类，你只需要通过`EnvConfig.getEnv()`方法就能获取到所有你在gradle中配置的值，而此时你不需要关心自己当前处于哪个环境。切换环境时你只需要调用`EnvConfig.setEnv(Type type)`方法切换当前环境即可。
 
 
 ## 体验
