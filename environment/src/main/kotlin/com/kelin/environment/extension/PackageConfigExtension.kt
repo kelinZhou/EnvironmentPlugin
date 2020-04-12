@@ -16,6 +16,7 @@ open class PackageConfigExtension {
     internal var versionCode = -1
     internal var versionName = ""
     internal var applicationId = ""
+    internal var variables: Map<String, String>? = null
 
     fun appIcon(appIcon: String) {
         this.appIcon = appIcon
@@ -39,5 +40,9 @@ open class PackageConfigExtension {
 
     fun applicationId(applicationId: String) {
         this.applicationId = applicationId
+    }
+
+    fun variables(variables: Map<String, String>) {
+        this.variables = variables
     }
 }

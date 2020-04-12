@@ -6,8 +6,9 @@ import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
-import java.lang.IllegalArgumentException
 import java.lang.RuntimeException
+import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * **描述:** 用来配置环境的Task。
@@ -78,13 +79,18 @@ open class EnvironmentTask : DefaultTask() {
             }
         }
 
-    val applicationId:String
-    get() {
-        return when {
-            config.applicationId.isNotEmpty() -> config.applicationId
-            else -> throw RuntimeException("You need set the versionName's value for ${if (release) "releaseConfig" else "devConfig"}.")
+    val applicationId: String
+        get() {
+            return when {
+                config.applicationId.isNotEmpty() -> config.applicationId
+                else -> throw RuntimeException("You need set the versionName's value for ${if (release) "releaseConfig" else "devConfig"}.")
+            }
         }
-    }
+
+    val variables: Map<String, String>?
+        get() {
+            return config.variables
+        }
 
     private fun getCurrentVariant(): Array<String> {
         val taskRequests = project.gradle.startParameter.taskRequests
@@ -95,7 +101,7 @@ open class EnvironmentTask : DefaultTask() {
             var end = tskReqStr.indexOf("ReleaseSources", start)
             end = if (end > 0) end else tskReqStr.indexOf("DebugSources", start)
             if (end > 0) {
-                tskReqStr.substring(start + 12, end).toLowerCase()
+                tskReqStr.substring(start + 12, end).toLowerCase(Locale.getDefault())
             } else {
                 ""
             }
@@ -105,7 +111,7 @@ open class EnvironmentTask : DefaultTask() {
                 var end = tskReqStr.indexOf("Release", start)
                 end = if (end > 0) end else tskReqStr.indexOf("Debug", start)
                 if (end > 0) {
-                    tskReqStr.substring(start + 12, end).toLowerCase()
+                    tskReqStr.substring(start + 12, end).toLowerCase(Locale.getDefault())
                 } else {
                     ""
                 }
@@ -115,119 +121,120 @@ open class EnvironmentTask : DefaultTask() {
         }
         return arrayOf(
             channel,
-            if (tskReqStr.toLowerCase().contains("release") || tskReqStr.contains("aR")) "release" else "debug"
+            if (tskReqStr.toLowerCase(Locale.getDefault()).contains("release") || tskReqStr.contains("aR")) "release" else "debug"
         )
     }
 
     @TaskAction
     fun publicEnvironment() {
+        config.variables?.forEach {
+            println("====================={${it.key}:${it.value}}")
+        }
         if (releaseExt.alias.isEmpty()) {
             releaseExt.alias = "Release"
         }
         if (release) {
             initEnvironment = "release"
         }
-        if (releaseExt.variables.isEmpty()) {
-            throw IllegalArgumentException("you must have release environment, you need called the releaseEnv method!")
-        } else {
-            if (!release) {
-                devExt.mergeVariables(releaseExt.variables)
-                if (devExt.alias.isEmpty()) {
-                    devExt.alias = "Dev"
-                }
-                testExt.mergeVariables(releaseExt.variables)
-                if (testExt.alias.isEmpty()) {
-                    testExt.alias = "Test"
-                }
-                demoExt.mergeVariables(releaseExt.variables)
-                if (demoExt.alias.isEmpty()) {
-                    demoExt.alias = "Demo"
-                }
+        require(releaseExt.variables.isNotEmpty()) { "you must have release environment, you need called the releaseEnv method!" }
+        if (!release) {
+            devExt.mergeVariables(releaseExt.variables)
+            if (devExt.alias.isEmpty()) {
+                devExt.alias = "Dev"
             }
+            testExt.mergeVariables(releaseExt.variables)
+            if (testExt.alias.isEmpty()) {
+                testExt.alias = "Test"
+            }
+            demoExt.mergeVariables(releaseExt.variables)
+            if (demoExt.alias.isEmpty()) {
+                demoExt.alias = "Demo"
+            }
+        }
 
-            val appExt = project.extensions.findByType<AppExtension>(AppExtension::class.java)
-            val app = appExt?.applicationVariants
+        val appExt = project.extensions.findByType<AppExtension>(AppExtension::class.java)
+        val app = appExt?.applicationVariants
 
-            val info = getCurrentVariant()
-            val channel = info[0]
-            val type = info[1]
-            println("Channel:${if (channel.isEmpty()) "unknown" else channel}")
-            println("BuildType:$type")
-            app?.all { variant ->
-                if (variant.name.toLowerCase().contains("$channel$type")) {
-                    println("\nGenerate placeholder for ${variant.name}:\n")
-                    when (initEnvironment) {
-                        "release" -> {
-                            releaseExt.variables
-                        }
-                        "dev" -> {
-                            devExt.variables
-                        }
-                        "test" -> {
-                            testExt.variables
-                        }
-                        "demo" -> {
-                            demoExt.variables
-                        }
-                        else -> {
-                            releaseExt.variables
-                        }
-                    }.forEach {
-                        if (it.value.placeholder) {
-                            println("${it.key} | ${it.value.value}")
-                            variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
-                        }
-                        if (config.appIcon.isNotEmpty()) {
-                            variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
-                        }
-                        if (config.appRoundIcon.isNotEmpty()) {
-                            variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] = config.appRoundIcon
-                        }
-                        if (config.appName.isNotEmpty()) {
-                            variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
-                        }
+        val info = getCurrentVariant()
+        val channel = info[0]
+        val type = info[1]
+        println("Channel:${if (channel.isEmpty()) "unknown" else channel}")
+        println("BuildType:$type")
+        app?.all { variant ->
+            if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
+                println("\nGenerate placeholder for ${variant.name}:\n")
+                when (initEnvironment) {
+                    "release" -> {
+                        releaseExt.variables
                     }
-                    println("\n\n")
-
-                    val buildConfig = variant.generateBuildConfigProvider.get()
-                    buildConfig.doFirst {
-                        buildConfig.items.add(object : ClassField {
-                            override fun getName(): String {
-                                return "IS_DEBUG"
-                            }
-
-                            override fun getAnnotations(): MutableSet<String> {
-                                return mutableSetOf()
-                            }
-
-                            override fun getType(): String {
-                                return "boolean"
-                            }
-
-                            override fun getValue(): String {
-                                return "Boolean.parseBoolean(\"${if (release) "false" else "true"}\")"
-                            }
-
-                            override fun getDocumentation(): String {
-                                return "Created by EnvironmentPlugin to indicate whether the current is or not Debug state."
-                            }
-                        })
+                    "dev" -> {
+                        devExt.variables
                     }
-                    envGenerators.add(
-                        GeneratedEnvConfig(
-                            buildConfig.sourceOutputDir.absolutePath,
-                            buildConfig.buildConfigPackageName,
-                            initEnvironment,
-                            release,
-                            variant.versionName ?: "",
-                            releaseExt,
-                            devExt,
-                            testExt,
-                            demoExt
-                        )
-                    )
-                    buildConfig.doLast { envGenerators.forEach { it.generate() } }
+                    "test" -> {
+                        testExt.variables
+                    }
+                    "demo" -> {
+                        demoExt.variables
+                    }
+                    else -> {
+                        releaseExt.variables
+                    }
+                }.forEach {
+                    if (it.value.placeholder) {
+                        println("${it.key} | ${it.value.value}")
+                        variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
+                    }
+                    if (config.appIcon.isNotEmpty()) {
+                        variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
+                    }
+                    if (config.appRoundIcon.isNotEmpty()) {
+                        variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] =
+                            config.appRoundIcon
+                    }
+                    if (config.appName.isNotEmpty()) {
+                        variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
+                    }
                 }
+                println("\n\n")
+
+                val buildConfig = variant.generateBuildConfigProvider.get()
+                buildConfig.doFirst {
+                    buildConfig.items.add(object : ClassField {
+                        override fun getName(): String {
+                            return "IS_DEBUG"
+                        }
+
+                        override fun getAnnotations(): MutableSet<String> {
+                            return mutableSetOf()
+                        }
+
+                        override fun getType(): String {
+                            return "boolean"
+                        }
+
+                        override fun getValue(): String {
+                            return "Boolean.parseBoolean(\"${if (release) "false" else "true"}\")"
+                        }
+
+                        override fun getDocumentation(): String {
+                            return "Created by EnvironmentPlugin to indicate whether the current is or not Debug state."
+                        }
+                    })
+                }
+                envGenerators.add(
+                    GeneratedEnvConfig(
+                        buildConfig.sourceOutputDir.absolutePath,
+                        buildConfig.buildConfigPackageName,
+                        initEnvironment,
+                        release,
+                        variant.versionName ?: "",
+                        releaseExt,
+                        devExt,
+                        testExt,
+                        demoExt
+                    )
+                )
+                buildConfig.doLast { envGenerators.forEach { it.generate() } }
             }
         }
     }
