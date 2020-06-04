@@ -19,7 +19,7 @@ buildscript {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
-    classpath "gradle.plugin.com.kelin.environment:environment:1.1.2"
+    classpath "gradle.plugin.com.kelin.environment:environment:1.1.4"
   }
 }
 ```
