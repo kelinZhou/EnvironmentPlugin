@@ -24,7 +24,6 @@ class EnvironmentPlugin : Plugin<Project> {
             it.release = true
             it.initEnvironment = "release"
         }
-
         project.tasks.findByName("preBuild")?.dependsOn(envTask)
 
         project.extensions.create("devConfig", PackageConfigExtension::class.java)

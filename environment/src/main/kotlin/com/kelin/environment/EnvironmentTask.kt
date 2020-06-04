@@ -7,6 +7,7 @@ import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.lang.RuntimeException
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -45,16 +46,7 @@ open class EnvironmentTask : DefaultTask() {
         get() {
             return when {
                 config.versionCode != -1 -> return config.versionCode
-                config.versionName.isNotEmpty() -> if (config.versionName.split(".").any { it.length > 1 }) {
-                    throw RuntimeException("versionName:${config.versionName} does not support. your versionName must be in format X.X.X, such as 1.0.0.")
-                } else {
-                    try {
-                        config.versionName.replace(".", "").trim().toInt()
-                    } catch (e: Exception) {
-                        throw RuntimeException("You need set the versionCode's value for ${if (release) "releaseConfig" else "devConfig"}.")
-                    }
-                }
-                else -> throw RuntimeException("You need set the versionCode's value for ${if (release) "releaseConfig" else "devConfig"}.")
+                else -> Date().let { SimpleDateFormat("yyMMddHH", Locale.CHINA).format(it).toInt() }
             }
         }
 
@@ -121,14 +113,18 @@ open class EnvironmentTask : DefaultTask() {
         }
         return arrayOf(
             channel,
-            if (tskReqStr.toLowerCase(Locale.getDefault()).contains("release") || tskReqStr.contains("aR")) "release" else "debug"
+            if (tskReqStr.toLowerCase(Locale.getDefault()).contains("release") || tskReqStr.contains(
+                    "aR"
+                )
+            ) "release" else "debug"
         )
     }
 
     @TaskAction
     fun publicEnvironment() {
+        println("===========VersionInfo:code=${versionCode}|name=${versionName}")
         config.variables?.forEach {
-            println("====================={${it.key}:${it.value}}")
+            println("===========PackageVariables{${it.key}:${it.value}}")
         }
         if (releaseExt.alias.isEmpty()) {
             releaseExt.alias = "Release"
