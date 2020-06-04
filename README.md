@@ -19,7 +19,7 @@ buildscript {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
-    classpath "gradle.plugin.com.kelin.environment:environment:1.1.4"
+    classpath "gradle.plugin.com.kelin.environment:environment:1.1.5"
   }
 }
 ```
@@ -29,12 +29,14 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
-#### 1.1.4
-    将`devConfig`和`releaseConfig`两个task中，默认的`versionCode`编码规则(省略`versionCode`配置时)改为yyMMddHH格式(年份后两位+月份+日期+小时)，例如:2020年5月20号 5:20分打包的话默认`versionCode`为20052005。如不希望使用这个规则，则可以手动指定(不省略`versionCode`的配置)。
+#### 1.1.5
+将`devConfig`和`releaseConfig`两个task中，默认的`versionCode`编码规则(省略`versionCode`配置时)改为yyMMddHH格式(年份后两位+月份+日期+小时)，例如:2020年5月20号 5:20分打包的话默认`versionCode`为20052005。如不希望使用这个规则，则可以手动指定(不省略`versionCode`的配置)。
+
 #### 1.1.3
-    增加为`devConfig`和`releaseConfig`配置环境变量的功能，以解决生产和除生产之外的环境变量配置，且该环境变量只在编译器可以使用(也就是只能在gradle中使用)，运行时(代码中)无法使用.
+增加为`devConfig`和`releaseConfig`配置环境变量的功能，以解决生产和除生产之外的环境变量配置，且该环境变量只在编译器可以使用(也就是只能在gradle中使用)，运行时(代码中)无法使用.
+
 #### 1.1.2及以下
-    省略 ……
+省略 ……
 
 ## 效果图
 ![效果图](materials/env_plugin_demo.png)
