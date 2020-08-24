@@ -19,7 +19,7 @@ buildscript {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
-    classpath "gradle.plugin.com.kelin.environment:environment:1.1.5"
+    classpath "gradle.plugin.com.kelin.environment:environment:1.1.6"
   }
 }
 ```
@@ -29,6 +29,8 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.1.6 美化编译日志的打印输出，使其容易阅读和复制。
+
 #### 1.1.5
 将`devConfig`和`releaseConfig`两个task中，默认的`versionCode`编码规则(省略`versionCode`配置时)改为yyMMddHH格式(年份后两位+月份+日期+小时)，例如:2020年5月20号 5:20分打包的话默认`versionCode`为20052005。如不希望使用这个规则，则可以手动指定(不省略`versionCode`的配置)。
 
