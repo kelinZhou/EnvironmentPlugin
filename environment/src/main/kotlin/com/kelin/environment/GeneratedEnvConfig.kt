@@ -240,18 +240,18 @@ class GeneratedEnvConfig(
     }
 
     private fun getEnvironmentMethodCode(): String {
-        println("========Release Environment:")
+        println("\nRelease Environment:")
         release.variables.forEach {
-            println("========variable: ${it.key} | ${it.value.value}")
+            println("${it.key} | ${it.value.value}")
         }
         if (!isRelease) {
             return "switch (curEnvType) {\n" +
                     "    case RELEASE:\n" +
                     "        return RELEASE_ENV;\n" +
                     if (dev.variables.isNotEmpty()) {
-                        println("========Dev Environment:")
+                        println("\nDev Environment:")
                         dev.variables.forEach {
-                            println("========variable: ${it.key} | ${it.value.value}")
+                            println("${it.key} | ${it.value.value}")
                         }
                         "    case DEV:\n" +
                                 "        return DEV_ENV;\n"
@@ -259,9 +259,9 @@ class GeneratedEnvConfig(
                         ""
                     } +
                     if (test.variables.isNotEmpty()) {
-                        println("========Test Environment:")
+                        println("\nTest Environment:")
                         test.variables.forEach {
-                            println("========variable: ${it.key} | ${it.value.value}")
+                            println("${it.key} | ${it.value.value}")
                         }
                         "    case TEST:\n" +
                                 "        return TEST_ENV;\n"
@@ -269,10 +269,11 @@ class GeneratedEnvConfig(
                         ""
                     } +
                     if (demo.variables.isNotEmpty()) {
-                        println("========Demo Environment:")
+                        println("\nDemo Environment:")
                         demo.variables.forEach {
-                            println("========variable: ${it.key} | ${it.value.value}")
+                            println("${it.key} | ${it.value.value}")
                         }
+                        println()
                         "    case DEMO:\n" +
                                 "        return DEMO_ENV;\n"
                     } else {

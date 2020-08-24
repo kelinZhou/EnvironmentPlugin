@@ -22,7 +22,7 @@ environment {
 //        versionCode 100
         versionName "1.0.0"
         applicationId "${packageName}.test"
-//        variables APPLICATION:"1212", PLUGINS_TEST:"我很好"
+        variables ARG1:"1212", ARG2:"我很好"
     }
 
     //当release的值为true时的包配置。
@@ -33,7 +33,7 @@ environment {
 //        versionCode 200
         versionName "2.0.0"
         applicationId packageName
-//        variables APPLICATION:"1212release", APPLICATION:"我很好release"
+        variables ARG1:"1212release", ARG2:"我很好release"
     }
 
     releaseEnv {

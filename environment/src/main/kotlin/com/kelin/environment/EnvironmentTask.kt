@@ -122,10 +122,7 @@ open class EnvironmentTask : DefaultTask() {
 
     @TaskAction
     fun publicEnvironment() {
-        println("===========VersionInfo:code=${versionCode}|name=${versionName}")
-        config.variables?.forEach {
-            println("===========PackageVariables{${it.key}:${it.value}}")
-        }
+        println("\n==========☆★ Environment Plugin Beginning ★☆==========\n")
         if (releaseExt.alias.isEmpty()) {
             releaseExt.alias = "Release"
         }
@@ -154,8 +151,8 @@ open class EnvironmentTask : DefaultTask() {
         val info = getCurrentVariant()
         val channel = info[0]
         val type = info[1]
-        println("Channel:${if (channel.isEmpty()) "unknown" else channel}")
-        println("BuildType:$type")
+        println("Channel: ${if (channel.isEmpty()) "unknown" else channel}")
+        println("BuildType: $type")
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\nGenerate placeholder for ${variant.name}:\n")
@@ -191,7 +188,7 @@ open class EnvironmentTask : DefaultTask() {
                         variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
                     }
                 }
-                println("\n\n")
+                println()
 
                 val buildConfig = variant.generateBuildConfigProvider.get()
                 buildConfig.doFirst {
@@ -230,7 +227,18 @@ open class EnvironmentTask : DefaultTask() {
                         demoExt
                     )
                 )
-                buildConfig.doLast { envGenerators.forEach { it.generate() } }
+                buildConfig.doLast {
+                    envGenerators.forEach { it.generate() }
+
+                    println("PackageVariables:")
+                    config.variables?.forEach {
+                        println("${it.key} : ${it.value}")
+                    }
+                    println("\nVersionInfo:")
+                    println("Code: $versionCode")
+                    println("Name: $versionName")
+                    println("\n==========☆★ Environment Plugin End ★☆==========\n")
+                }
             }
         }
     }
