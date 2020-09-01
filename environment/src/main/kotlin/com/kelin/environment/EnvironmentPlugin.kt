@@ -21,8 +21,8 @@ import org.gradle.api.Project
 class EnvironmentPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val envTask = project.tasks.create("environment", EnvironmentTask::class.java) {
-            it.release = true
-            it.initEnvironment = "release"
+            it.online = true
+            it.initEnvironment = EnvType.RELEASE
         }
         project.tasks.findByName("preBuild")?.dependsOn(envTask)
 

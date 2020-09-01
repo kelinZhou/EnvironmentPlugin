@@ -19,7 +19,7 @@ import com.squareup.javapoet.MethodSpec
 class GeneratedEnvConfig(
     private val filePath: String,
     private val packageName: String,
-    private val environment: String,
+    private val environment: EnvType,
     private val isRelease: Boolean,
     private val version: String,
     private val release: EnvironmentExtension,

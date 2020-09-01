@@ -25,8 +25,13 @@ import kotlin.collections.ArrayList
  */
 open class EnvironmentTask : DefaultTask() {
 
-    var release = false
-    var initEnvironment = ""
+    val release = EnvType.RELEASE
+    val dev = EnvType.DEV
+    val test = EnvType.TEST
+    val demo = EnvType.DEMO
+
+    var online = false
+    var initEnvironment = release
 
     private val envGenerators = ArrayList<GeneratedEnvConfig>()
     private val releaseExt by lazy { project.extensions.findByName("releaseEnv") as EnvironmentExtension }
@@ -35,7 +40,7 @@ open class EnvironmentTask : DefaultTask() {
     private val demoExt by lazy { project.extensions.findByName("demoEnv") as EnvironmentExtension }
 
     private val config by lazy {
-        if (release) {
+        if (online) {
             project.extensions.findByName("releaseConfig") as PackageConfigExtension
         } else {
             project.extensions.findByName("devConfig") as PackageConfigExtension
@@ -67,7 +72,7 @@ open class EnvironmentTask : DefaultTask() {
                         }
                     }
                 }
-                else -> throw RuntimeException("You need set the versionName's value for ${if (release) "releaseConfig" else "devConfig"}.")
+                else -> throw RuntimeException("You need set the versionName's value for ${if (online) "releaseConfig" else "devConfig"}.")
             }
         }
 
@@ -75,7 +80,7 @@ open class EnvironmentTask : DefaultTask() {
         get() {
             return when {
                 config.applicationId.isNotEmpty() -> config.applicationId
-                else -> throw RuntimeException("You need set the versionName's value for ${if (release) "releaseConfig" else "devConfig"}.")
+                else -> throw RuntimeException("You need set the versionName's value for ${if (online) "releaseConfig" else "devConfig"}.")
             }
         }
 
@@ -83,6 +88,10 @@ open class EnvironmentTask : DefaultTask() {
         get() {
             return config.variables
         }
+
+    fun getVariable(key: String): String {
+        return config.variables?.get(key) ?: ""
+    }
 
     private fun getCurrentVariant(): Array<String> {
         val taskRequests = project.gradle.startParameter.taskRequests
@@ -126,11 +135,11 @@ open class EnvironmentTask : DefaultTask() {
         if (releaseExt.alias.isEmpty()) {
             releaseExt.alias = "Release"
         }
-        if (release) {
-            initEnvironment = "release"
+        if (online) {
+            initEnvironment = EnvType.RELEASE
         }
         require(releaseExt.variables.isNotEmpty()) { "you must have release environment, you need called the releaseEnv method!" }
-        if (!release) {
+        if (!online) {
             devExt.mergeVariables(releaseExt.variables)
             if (devExt.alias.isEmpty()) {
                 devExt.alias = "Dev"
@@ -157,20 +166,17 @@ open class EnvironmentTask : DefaultTask() {
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\nGenerate placeholder for ${variant.name}:\n")
                 when (initEnvironment) {
-                    "release" -> {
+                    EnvType.RELEASE -> {
                         releaseExt.variables
                     }
-                    "dev" -> {
+                    EnvType.DEV -> {
                         devExt.variables
                     }
-                    "test" -> {
+                    EnvType.TEST -> {
                         testExt.variables
                     }
-                    "demo" -> {
+                    EnvType.DEMO -> {
                         demoExt.variables
-                    }
-                    else -> {
-                        releaseExt.variables
                     }
                 }.forEach {
                     if (it.value.placeholder) {
@@ -206,7 +212,7 @@ open class EnvironmentTask : DefaultTask() {
                         }
 
                         override fun getValue(): String {
-                            return "Boolean.parseBoolean(\"${if (release) "false" else "true"}\")"
+                            return "Boolean.parseBoolean(\"${if (online) "false" else "true"}\")"
                         }
 
                         override fun getDocumentation(): String {
@@ -219,7 +225,7 @@ open class EnvironmentTask : DefaultTask() {
                         buildConfig.sourceOutputDir.absolutePath,
                         buildConfig.buildConfigPackageName,
                         initEnvironment,
-                        release,
+                        online,
                         variant.versionName ?: "",
                         releaseExt,
                         devExt,

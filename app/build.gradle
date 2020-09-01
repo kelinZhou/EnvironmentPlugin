@@ -9,10 +9,10 @@ apply plugin: "com.kelin.environment"
 
 environment {
     //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
-    release false
+    online false
 
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
-    initEnvironment "test"
+    initEnvironment release
 
     //当release的值为false时的包配置。
     devConfig {
@@ -33,7 +33,7 @@ environment {
 //        versionCode 200
         versionName "2.0.0"
         applicationId packageName
-        variables ARG1:"1212release", ARG2:"我很好release"
+        variables ARG1:"1212上线", ARG2:"我很好上线"
     }
 
     releaseEnv {
@@ -80,26 +80,8 @@ android {
         applicationId environment.applicationId
         minSdkVersion 14
         targetSdkVersion 28
+        println("=========${environment.variables}")
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-    }
-
-    android.applicationVariants.all {
-        def flavors = it.productFlavors
-        def channel = flavors.isEmpty() ? "" : flavors[0].name.split("-")[0] + "_"
-        //获取当前时间的"YYYY-MM-dd"格式。assembleRelease
-        def createTime = new Date().format("YYYY-MM-dd_HHmm", TimeZone.getTimeZone("GMT+08:00"))
-        def buildType = it.buildType.name
-        if (buildType == "release") {
-            it.getPackageApplicationProvider().get().outputDirectory = new File(project.rootDir.absolutePath + "/apks/${it.applicationId}/${createTime}")
-        }
-        it.outputs.all {
-            if (it.outputFile != null && 'release' == buildType) {
-                if (it.outputFile.name.endsWith(".apk")) {
-                    //重新对apk命名。
-                    it.outputFileName = "${channel}EnvPlugin_v${versionName}_${createTime}-release.apk"
-                }
-            }
-        }
     }
 
     signingConfigs {

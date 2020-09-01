@@ -29,6 +29,17 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.1.7 优化配置
+1. environment Task 中的用来配置是否是打生产包的release更名为online。
+2. environment Task 中的用来配置初始环境的initEnvironment的配置方式由字符串类型改为枚举类型，具体有以下四种：
+```groovy
+release  //对应releaseEnv Task (生产环境)
+dev      //对应devEnv Task (开发环境)
+test     //对应testEnv Task (测试环境)
+demo     //对应demoEnv Task (预发布环境)
+```
+3. environment增加```getVariable(key: String)```方法，用于更加方便的获取devConfig和releaseConfig两个Task中配置的variables。
+
 #### 1.1.6 美化编译日志的打印输出，使其容易阅读和复制。
 
 #### 1.1.5
