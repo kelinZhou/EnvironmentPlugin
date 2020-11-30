@@ -196,54 +196,32 @@ open class EnvironmentTask : DefaultTask() {
                 }
                 println()
 
-                val buildConfig = variant.generateBuildConfigProvider.get()
-                buildConfig.doFirst {
-                    buildConfig.items.add(object : ClassField {
-                        override fun getName(): String {
-                            return "IS_DEBUG"
-                        }
-
-                        override fun getAnnotations(): MutableSet<String> {
-                            return mutableSetOf()
-                        }
-
-                        override fun getType(): String {
-                            return "boolean"
-                        }
-
-                        override fun getValue(): String {
-                            return "Boolean.parseBoolean(\"${if (online) "false" else "true"}\")"
-                        }
-
-                        override fun getDocumentation(): String {
-                            return "Created by EnvironmentPlugin to indicate whether the current is or not Debug state."
-                        }
-                    })
-                }
-                envGenerators.add(
-                    GeneratedEnvConfig(
-                        buildConfig.sourceOutputDir.absolutePath,
-                        buildConfig.buildConfigPackageName,
-                        initEnvironment,
-                        online,
-                        variant.versionName ?: "",
-                        releaseExt,
-                        devExt,
-                        testExt,
-                        demoExt
+                variant.generateBuildConfigProvider.get().run {
+                    envGenerators.add(
+                        GeneratedEnvConfig(
+                            sourceOutputDir.absolutePath,
+                            buildConfigPackageName.get(),
+                            initEnvironment,
+                            online,
+                            variant.versionName ?: "",
+                            releaseExt,
+                            devExt,
+                            testExt,
+                            demoExt
+                        )
                     )
-                )
-                buildConfig.doLast {
-                    envGenerators.forEach { it.generate() }
+                    doLast {
+                        envGenerators.forEach { it.generate() }
 
-                    println("PackageVariables:")
-                    config.variables?.forEach {
-                        println("${it.key} : ${it.value}")
+                        println("PackageVariables:")
+                        config.variables?.forEach {
+                            println("${it.key} : ${it.value}")
+                        }
+                        println("\nVersionInfo:")
+                        println("Code: $versionCode")
+                        println("Name: $versionName")
+                        println("\n==========☆★ Environment Plugin End ★☆==========\n")
                     }
-                    println("\nVersionInfo:")
-                    println("Code: $versionCode")
-                    println("Name: $versionName")
-                    println("\n==========☆★ Environment Plugin End ★☆==========\n")
                 }
             }
         }

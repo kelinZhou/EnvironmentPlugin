@@ -29,6 +29,9 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.1.8 修复问题。
+1.修复在gradle4.0及以上版本中编辑报错(变更了buildConfigPackageName的返回值类型)的问题
+2.去除了在BuildConfig中自动新增IS_DEBUG字段的功能(可以使用EnvConfig.IS_RELEASE字段代替)。
 #### 1.1.7 优化配置
 1. environment Task 中的用来配置是否是打生产包的release更名为online。
 2. environment Task 中的用来配置初始环境的initEnvironment的配置方式由字符串类型改为枚举类型，具体有以下四种：
