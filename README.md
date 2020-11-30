@@ -19,7 +19,7 @@ buildscript {
     maven { url "https://plugins.gradle.org/m2/" }
   }
   dependencies {
-    classpath "gradle.plugin.com.kelin.environment:environment:1.1.6"
+    classpath "gradle.plugin.com.kelin.environment:environment:${last version here}"
   }
 }
 ```
@@ -29,7 +29,8 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
-#### 1.1.8 修复问题。
+#### 1.1.9 为了增加易用性，在EnvConfig中增加IS_DEBUG字段(等价于!EnvConfig.IS_RELEASE)。
+#### 1.1.8 Gradle4.0适配，Gradle没有升级到4.0的同学请继续使用1.1.8之前的版本。
 1.修复在gradle4.0及以上版本中编辑报错(变更了buildConfigPackageName的返回值类型)的问题
 2.去除了在BuildConfig中自动新增IS_DEBUG字段的功能(可以使用EnvConfig.IS_RELEASE字段代替)。
 #### 1.1.7 优化配置

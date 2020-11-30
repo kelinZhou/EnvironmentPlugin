@@ -81,6 +81,11 @@ class GeneratedEnvConfig(
                     .build()
             )
             .addField(
+                FieldSpec.builder(Boolean::class.java, "IS_DEBUG", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                    .initializer("Boolean.parseBoolean(\"${!isRelease}\")")
+                    .build()
+            )
+            .addField(
                 FieldSpec.builder(typeType, "INIT_ENV", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                     .initializer("Type.nameOf(\"$environment\")")
                     .build()
