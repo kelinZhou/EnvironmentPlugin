@@ -1,6 +1,7 @@
 package com.kelin.environment
 
 import java.io.Serializable
+import java.lang.reflect.Type
 
 /**
  * **描述:** 环境变量。
@@ -11,4 +12,4 @@ import java.io.Serializable
  *
  * **版本:** v 1.0.0
  */
-data class Variable(val value: String, var placeholder: Boolean) : Serializable
+data class Variable(val value: String, val placeholder: Boolean, val type: Type) : Serializable

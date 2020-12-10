@@ -29,6 +29,9 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.2.0.1 
+    * 修复在极端情况下会出现环境配置实例化时传值不正确的Bug。
+    * 环境配置变量支持指定类型，目前支持String、int、boolean这三种类型。
 #### 1.1.9 为了增加易用性，在EnvConfig中增加IS_DEBUG字段(等价于!EnvConfig.IS_RELEASE)。
 #### 1.1.8 Gradle4.0适配，Gradle没有升级到4.0的同学请继续使用1.1.8之前的版本。
 1.修复在gradle4.0及以上版本中编辑报错(变更了buildConfigPackageName的返回值类型)的问题

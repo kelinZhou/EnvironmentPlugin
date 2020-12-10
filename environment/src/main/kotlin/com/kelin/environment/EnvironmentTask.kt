@@ -140,21 +140,21 @@ open class EnvironmentTask : DefaultTask() {
         }
         require(releaseExt.variables.isNotEmpty()) { "you must have release environment, you need called the releaseEnv method!" }
         if (!online) {
-            devExt.mergeVariables(releaseExt.variables)
+//            devExt.mergeVariables(releaseExt.variables)
             if (devExt.alias.isEmpty()) {
                 devExt.alias = "Dev"
             }
-            testExt.mergeVariables(releaseExt.variables)
+//            testExt.mergeVariables(releaseExt.variables)
             if (testExt.alias.isEmpty()) {
                 testExt.alias = "Test"
             }
-            demoExt.mergeVariables(releaseExt.variables)
+//            demoExt.mergeVariables(releaseExt.variables)
             if (demoExt.alias.isEmpty()) {
                 demoExt.alias = "Demo"
             }
         }
 
-        val appExt = project.extensions.findByType<AppExtension>(AppExtension::class.java)
+        val appExt = project.extensions.findByType(AppExtension::class.java)
         val app = appExt?.applicationVariants
 
         val info = getCurrentVariant()
@@ -167,32 +167,26 @@ open class EnvironmentTask : DefaultTask() {
                 println("\nGenerate placeholder for ${variant.name}:\n")
                 when (initEnvironment) {
                     EnvType.RELEASE -> {
-                        releaseExt.variables
+                        releaseExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders)
                     }
                     EnvType.DEV -> {
-                        devExt.variables
+                        devExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, releaseExt)
                     }
                     EnvType.TEST -> {
-                        testExt.variables
+                        testExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, releaseExt)
                     }
                     EnvType.DEMO -> {
-                        demoExt.variables
+                        demoExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, releaseExt)
                     }
-                }.forEach {
-                    if (it.value.placeholder) {
-                        println("${it.key} | ${it.value.value}")
-                        variant.mergedFlavor.manifestPlaceholders[it.key] = it.value.value
-                    }
-                    if (config.appIcon.isNotEmpty()) {
-                        variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
-                    }
-                    if (config.appRoundIcon.isNotEmpty()) {
-                        variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] =
-                            config.appRoundIcon
-                    }
-                    if (config.appName.isNotEmpty()) {
-                        variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
-                    }
+                }
+                if (config.appIcon.isNotEmpty()) {
+                    variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
+                }
+                if (config.appRoundIcon.isNotEmpty()) {
+                    variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] = config.appRoundIcon
+                }
+                if (config.appName.isNotEmpty()) {
+                    variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
                 }
                 println()
 

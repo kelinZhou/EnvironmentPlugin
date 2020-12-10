@@ -12,62 +12,64 @@ environment {
     online false
 
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
-    initEnvironment release
+    initEnvironment demo
 
-    //当release的值为false时的包配置。
-    devConfig {
+    releaseConfig {
         appIcon "@mipmap/ic_android"
         appRoundIcon "@mipmap/ic_android"
         appName "EnvPlugin"
-//        versionCode 100
         versionName "1.0.0"
         applicationId "${packageName}.test"
-        variables ARG1:"1212", ARG2:"我很好"
+        variables APK_BUILD_TYPE: "release"
     }
 
-    //当release的值为true时的包配置。
-    releaseConfig {
+    devConfig {
         appIcon "@mipmap/ic_launcher"
         appRoundIcon "@mipmap/ic_launcher"
         appName "@string/app_name"
-//        versionCode 200
         versionName "2.0.0"
         applicationId packageName
-        variables ARG1:"1212上线", ARG2:"我很好上线"
+        variables APK_BUILD_TYPE: "test"
     }
 
     releaseEnv {
         alias "生产"
 
-        variable "API_HOST", "192.168.31.24"
-        variable "API_PORT", "8443"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5ecccc', true
-        variable "WX_APP_ID", "wxc23iadfaioaiuu0a"
-        variable "WX_APP_SECRET", "ioa9ad9887ad98ay979ad86"
-    }
-
-    devEnv {
-        alias "开发"
-
-        variable "API_HOST", "192.168.30.11"
-        variable "API_PORT", "8016"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5eefff'
+        variable "API_BASE_URL", "https://iyx.smart.api.intelliyx.com/"
+        variable "API_VERSION", ""
+        variable "BANK_SDK_APP_ID", "3031266f-54a8-46dd-ba47-2a0d516df29b"
+        variable "BANK_SDK_APP_SECRET", "f4db09cf-80b2-4d3f-bda1-997ab41a3754"
+        //定位API的路径
+        variable "LOCATE_URL", "https://iyx.smart.api.intelliyx.com/api/v1/"
+        variable "WE_CHAT_APP_ID", "wxf21bd8885522192d"
+        variable "WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06"
+        variable "QQ_APP_ID", "1110499891", true
+        variable "QQ_APP_KEY", "cmyrDyPBYXDudUtZ"
+        variable "HR_SDK_ENV", "4" ,"int"  //4表示华瑞银行sdk为生产环境
     }
 
     testEnv {
         alias "测试"
 
-        variable "API_HOST", "192.168.36.18"
-        variable "API_PORT", "8001"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5eebbb'
+        variable "API_BASE_URL", "http://sit.tms.api.yuchuanglian.com/"
+        variable "API_VERSION", "180530"
+        variable "BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10"
+        variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
+        //定位API的路径
+        variable "LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/"
+        variable "HR_SDK_ENV", "1"  //1表示华瑞银行sdk为SIT环境
     }
 
     demoEnv {
         alias "预发"
 
-        variable "API_HOST", "192.168.36.10"
-        variable "API_PORT", "8109"
-        variable "UM_APP_KEY", '7c2ed9f7f1d5eeaaa'
+        variable "API_BASE_URL", "http://uat.tms.api.yuchuanglian.com/"
+        variable "API_VERSION", "180530"
+        variable "BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10"
+        variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
+        //定位API的路径
+        variable "LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/"
+        variable "HR_SDK_ENV", "2"  //2表示华瑞银行sdk为UAT环境
     }
 }
 

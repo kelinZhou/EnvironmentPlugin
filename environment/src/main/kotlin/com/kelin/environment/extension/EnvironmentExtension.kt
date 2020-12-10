@@ -1,6 +1,7 @@
 package com.kelin.environment.extension
 
 import com.kelin.environment.Variable
+import java.lang.reflect.Type
 
 /**
  * **描述:** 环境配置的基类。
@@ -18,20 +19,59 @@ open class EnvironmentExtension {
     var alias = ""
 
     fun variable(name: String, value: String) {
-        variable(name, value, false)
+        variable(name, value, "String", false)
     }
 
     fun variable(name: String, value: String, placeholder: Boolean) {
-        variables[name] = Variable(value, placeholder)
+        variable(name, value, "String", placeholder)
     }
 
-    internal fun mergeVariables(vs: HashMap<String, Variable>) {
-        if (variables.isNotEmpty()) {
-            vs.forEach {
-                if (variables.containsKey(it.key)) {
-                    variables[it.key]!!.placeholder = it.value.placeholder
-                } else {
-                    variables[it.key] = it.value
+    fun variable(name: String, value: String, type: String) {
+        variable(name, value, type, false)
+    }
+
+    fun variable(name: String, value: String, type: String, placeholder: Boolean) {
+        val fixedType = when {
+            "Int".equals(type, true) -> Int::class.java
+            "Boolean".equals(type, true) -> Boolean::class.java
+            else -> String::class.java
+        }
+        variables[name] = Variable(value, placeholder, fixedType)
+    }
+
+    internal fun getEnvironmentArgs(reference: EnvironmentExtension? = null): String {
+        return reference?.variables?.let { v ->
+            v.entries.joinToString(", ") { entry ->
+                variables[entry.key]?.let { getValueByType(it.value, entry.value.type) }
+                    ?: entry.value.let { getValueByType(it.value, it.type) }
+            }
+        } ?: variables.values.joinToString(", ") { getValueByType(it.value, it.type) }
+    }
+
+    private fun getValueByType(value: String, type: Type): String {
+        return when (String::class.java.typeName) {
+            type.typeName -> {
+                "\"${value}\""
+            }
+            else -> {
+                value
+            }
+        }
+    }
+
+    fun createManifestPlaceholders(placeholders: MutableMap<String, Any>, reference: EnvironmentExtension? = null) {
+        if (reference != null) {
+            reference.variables.forEach { v ->
+                (variables[v.key] ?: v.value).run {
+                    if (v.value.placeholder) {
+                        placeholders[v.key] = value
+                    }
+                }
+            }
+        } else {
+            variables.forEach { v ->
+                if (v.value.placeholder) {
+                    placeholders[v.key] = v.value.value
                 }
             }
         }

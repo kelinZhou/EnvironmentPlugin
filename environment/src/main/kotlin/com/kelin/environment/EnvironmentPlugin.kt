@@ -24,7 +24,11 @@ class EnvironmentPlugin : Plugin<Project> {
             it.online = true
             it.initEnvironment = EnvType.RELEASE
         }
-        project.tasks.findByName("preBuild")?.dependsOn(envTask)
+//        project.tasks.find {
+//            println("TaskName:${it.name}") //打印所有task的名字
+//            return@find false
+//        }
+        project.tasks.findByName("preBuild")?.dependsOn(envTask)//每当cleanTask执行之后就执行环境配置的Task
 
         project.extensions.create("devConfig", PackageConfigExtension::class.java)
         project.extensions.create("releaseConfig", PackageConfigExtension::class.java)

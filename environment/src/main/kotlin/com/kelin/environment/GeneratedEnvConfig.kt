@@ -5,6 +5,7 @@ import com.squareup.javapoet.*
 import java.io.File
 import javax.lang.model.element.Modifier
 import com.squareup.javapoet.MethodSpec
+import java.lang.reflect.Type
 
 
 /**
@@ -29,7 +30,7 @@ class GeneratedEnvConfig(
 ) {
 
     internal fun generate() {
-        val parameters = writeEnvironmentInterface(release.variables, packageName, filePath)
+        val parameters = writeEnvironmentInterface(release, packageName, filePath)
         val typeType = ClassName.get(packageName, CONFIG_NAME, "Type")
         val nameOf = MethodSpec.methodBuilder("nameOf")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
@@ -64,9 +65,9 @@ class GeneratedEnvConfig(
             .addMethod(
                 MethodSpec.constructorBuilder()
                     .apply {
-                        parameters.forEach { addParameter(String::class.java, it) }
+                        parameters.forEach { addParameter(it.first, it.second) }
                     }
-                    .addStatement("super(${parameters.joinToString(", ")})")
+                    .addStatement("super(${parameters.joinToString { it.second }})")
                     .build()
             )
             .build()
@@ -93,7 +94,7 @@ class GeneratedEnvConfig(
             .apply {
                 addField(
                     FieldSpec.builder(environmentType, "RELEASE_ENV", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                        .initializer("new EnvironmentImpl(${release.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs()})")
                         .build()
                 )
                 if (!isRelease) {
@@ -106,7 +107,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${dev.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs(release)})")
                                 .build()
                         )
                     }
@@ -119,7 +120,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${test.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs(release)})")
                                 .build()
                         )
                     }
@@ -132,7 +133,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${demo.variables.values.joinToString(", ") { "\"${it.value}\"" }})")
+                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs(release)})")
                                 .build()
                         )
                     }
@@ -293,21 +294,22 @@ class GeneratedEnvConfig(
     }
 
     private fun writeEnvironmentInterface(
-        release: HashMap<String, Variable>,
+        env: EnvironmentExtension,
         packageName: String,
         filePath: String
-    ): List<String> {
-        val parameters = ArrayList<String>(release.size)
-        val fields = ArrayList<FieldSpec>(release.size)
+    ): List<Pair<Type, String>> {
+        val variables = env.variables
+        val parameters = ArrayList<Pair<Type, String>>(variables.size)
+        val fields = ArrayList<FieldSpec>(variables.size)
         val constructor = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PROTECTED)
-        val entries = release.entries
+        val entries = variables.entries
         for (i: Int in 0 until entries.size) {
             val entry = entries.elementAt(i)
-            fields.add(FieldSpec.builder(String::class.java, entry.key, Modifier.PUBLIC, Modifier.FINAL).build())
-            constructor.addParameter(String::class.java, "var$i")
+            fields.add(FieldSpec.builder(entry.value.type, entry.key, Modifier.PUBLIC, Modifier.FINAL).build())
+            constructor.addParameter(entry.value.type, "var$i")
                 .addStatement("\$N = \$N", entry.key, "var$i")
-            parameters.add("var$i")
+            parameters.add(Pair(entry.value.type, "var$i"))
         }
 
 
