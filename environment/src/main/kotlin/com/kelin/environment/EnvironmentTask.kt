@@ -1,7 +1,6 @@
 package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
-import com.android.builder.model.ClassField
 import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
@@ -10,6 +9,7 @@ import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.LinkedHashMap
 
 /**
  * **描述:** 用来配置环境的Task。
@@ -84,13 +84,34 @@ open class EnvironmentTask : DefaultTask() {
             }
         }
 
-    val variables: Map<String, String>?
-        get() {
-            return config.variables
+    private val currentEnvVariables: Map<String, Variable>
+        get() = LinkedHashMap(releaseExt.variables).apply {
+            if (online) {
+                releaseExt
+            } else {
+                when (initEnvironment) {
+                    EnvType.RELEASE -> releaseExt
+                    EnvType.DEV -> devExt
+                    EnvType.TEST -> testExt
+                    EnvType.DEMO -> demoExt
+                }
+            }.variables.forEach {
+                put(it.key, it.value)
+            }
         }
 
+    val variables: Map<String, String>?
+        get() {
+            return LinkedHashMap(config.variables).apply {
+                currentEnvVariables.forEach {
+                    put(it.key, it.value.value)
+                }
+            }
+        }
+
+    @Suppress("UNCHECKED_CAST")
     fun getVariable(key: String): String {
-        return config.variables?.get(key) ?: ""
+        return config.variables?.get(key) ?: currentEnvVariables[key]?.value ?: ""
     }
 
     private fun getCurrentVariant(): Array<String> {
@@ -122,7 +143,8 @@ open class EnvironmentTask : DefaultTask() {
         }
         return arrayOf(
             channel,
-            if (tskReqStr.toLowerCase(Locale.getDefault()).contains("release") || tskReqStr.contains(
+            if (tskReqStr.toLowerCase(Locale.getDefault())
+                    .contains("release") || tskReqStr.contains(
                     "aR"
                 )
             ) "release" else "debug"
@@ -164,31 +186,44 @@ open class EnvironmentTask : DefaultTask() {
         println("BuildType: $type")
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
-                println("\nGenerate placeholder for ${variant.name}:\n")
+                println("\n------Generate placeholder for ${variant.name} Beginning------\n")
                 when (initEnvironment) {
                     EnvType.RELEASE -> {
                         releaseExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders)
                     }
                     EnvType.DEV -> {
-                        devExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, releaseExt)
+                        devExt.createManifestPlaceholders(
+                            variant.mergedFlavor.manifestPlaceholders,
+                            releaseExt
+                        )
                     }
                     EnvType.TEST -> {
-                        testExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, releaseExt)
+                        testExt.createManifestPlaceholders(
+                            variant.mergedFlavor.manifestPlaceholders,
+                            releaseExt
+                        )
                     }
                     EnvType.DEMO -> {
-                        demoExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, releaseExt)
+                        demoExt.createManifestPlaceholders(
+                            variant.mergedFlavor.manifestPlaceholders,
+                            releaseExt
+                        )
                     }
                 }
                 if (config.appIcon.isNotEmpty()) {
                     variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
                 }
                 if (config.appRoundIcon.isNotEmpty()) {
-                    variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] = config.appRoundIcon
+                    variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] =
+                        config.appRoundIcon
                 }
                 if (config.appName.isNotEmpty()) {
                     variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
                 }
-                println()
+                variant.mergedFlavor.manifestPlaceholders.forEach {
+                    println("${it.key} : ${it.value}")
+                }
+                println("\n------Generate placeholder for ${variant.name} End------\n")
 
                 variant.generateBuildConfigProvider.get().run {
                     envGenerators.add(

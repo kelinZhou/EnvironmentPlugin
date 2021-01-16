@@ -29,6 +29,10 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.3.0
+对```environment.getVariable(key)```方法和```environment.variables```字段进行优化，不仅可以取出devConfig和releaseConfig中的配置，还能取出各个Env中的配置。
+#### 1.2.0.2
+    完善日志输出，在控制台中打印出所有的manifestPlaceHolder的字段，方便排查问题。
 #### 1.2.0.1 
     * 修复在极端情况下会出现环境配置实例化时传值不正确的Bug。
     * 环境配置变量支持指定类型，目前支持String、int、boolean这三种类型。

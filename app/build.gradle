@@ -82,8 +82,11 @@ android {
         applicationId environment.applicationId
         minSdkVersion 14
         targetSdkVersion 28
-        println("=========${environment.variables}")
+
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        println("=========${environment.variables}")
+        println("=========${environment.getVariable("API_BASE_URL")}")
     }
 
     signingConfigs {
