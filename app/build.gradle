@@ -20,7 +20,7 @@ environment {
         appName "EnvPlugin"
         versionName "1.0.0"
         applicationId "${packageName}.test"
-        variables APK_BUILD_TYPE: "release"
+        variable 'APK_BUILD_TYPE', "release"
     }
 
     devConfig {
@@ -29,7 +29,7 @@ environment {
         appName "@string/app_name"
         versionName "2.0.0"
         applicationId packageName
-        variables APK_BUILD_TYPE: "test"
+        variable 'APK_BUILD_TYPE', "test"
     }
 
     releaseEnv {

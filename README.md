@@ -29,6 +29,8 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.4.0
+变更方法 releaseConfig和devConfig中使用variable()方法添加编译期的临时变量。 
 #### 1.3.0
 对```environment.getVariable(key)```方法和```environment.variables```字段进行优化，不仅可以取出devConfig和releaseConfig中的配置，还能取出各个Env中的配置。
 #### 1.2.0.2

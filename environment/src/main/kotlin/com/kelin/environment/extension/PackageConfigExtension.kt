@@ -1,5 +1,9 @@
 package com.kelin.environment.extension
 
+import com.kelin.environment.Variable
+import com.kelin.environment.VariableExtension
+import java.util.HashMap
+
 /**
  * **描述:** 用来配置包信息的Extension.
  *
@@ -9,14 +13,14 @@ package com.kelin.environment.extension
  *
  * **版本:** v 1.0.0
  */
-open class PackageConfigExtension {
+open class PackageConfigExtension : VariableExtension {
     internal var appIcon = ""
     internal var appRoundIcon = ""
     internal var appName = ""
     internal var versionCode = -1
     internal var versionName = ""
     internal var applicationId = ""
-    internal var variables: Map<String, String>? = null
+    internal val variables = HashMap<String, Variable>()
 
     fun appIcon(appIcon: String) {
         this.appIcon = appIcon
@@ -42,7 +46,11 @@ open class PackageConfigExtension {
         this.applicationId = applicationId
     }
 
-    fun variables(variables: Map<String, String>) {
-        this.variables = variables
+    override fun variable(name: String, variable: Variable) {
+        variables[name] = variable
+    }
+
+    fun getVariable(name: String): String? {
+        return variables[name]?.value
     }
 }

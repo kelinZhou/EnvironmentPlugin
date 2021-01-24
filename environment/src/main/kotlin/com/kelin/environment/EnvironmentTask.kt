@@ -23,12 +23,16 @@ import kotlin.collections.LinkedHashMap
  *
  * **版本:** v 1.0.0
  */
-open class EnvironmentTask : DefaultTask() {
+open class EnvironmentTask : DefaultTask(), VariableExtension {
 
     val release = EnvType.RELEASE
     val dev = EnvType.DEV
     val test = EnvType.TEST
     val demo = EnvType.DEMO
+
+
+    private val innerVariables = HashMap<String, Variable>()
+
 
     var online = false
     var initEnvironment = release
@@ -46,6 +50,30 @@ open class EnvironmentTask : DefaultTask() {
             project.extensions.findByName("devConfig") as PackageConfigExtension
         }
     }
+
+    val appName: String
+        get() {
+            return when {
+                config.appName.isNotEmpty() -> config.appName
+                else -> throw RuntimeException("You need set the appName's value for ${if (online) "releaseConfig" else "devConfig"}.")
+            }
+        }
+
+    val appIcon: String
+        get() {
+            return when {
+                config.appIcon.isNotEmpty() -> config.appIcon
+                else -> throw RuntimeException("You need set the appIcon's value for ${if (online) "releaseConfig" else "devConfig"}.")
+            }
+        }
+
+    val appRoundIcon: String
+        get() {
+            return when {
+                config.appRoundIcon.isNotEmpty() -> config.appRoundIcon
+                else -> throw RuntimeException("You need set the appRoundIcon's value for ${if (online) "releaseConfig" else "devConfig"}.")
+            }
+        }
 
     val versionCode: Int
         get() {
@@ -80,7 +108,22 @@ open class EnvironmentTask : DefaultTask() {
         get() {
             return when {
                 config.applicationId.isNotEmpty() -> config.applicationId
-                else -> throw RuntimeException("You need set the versionName's value for ${if (online) "releaseConfig" else "devConfig"}.")
+                else -> throw RuntimeException("You need set the applicationId's value for ${if (online) "releaseConfig" else "devConfig"}.")
+            }
+        }
+
+    val variables: Map<String, String>?
+        get() {
+            return LinkedHashMap<String, String>().apply {
+                innerVariables.forEach {
+                    put(it.key, it.value.value)
+                }
+                config.variables.forEach{
+                    put(it.key, it.value.value)
+                }
+                currentEnvVariables.forEach {
+                    put(it.key, it.value.value)
+                }
             }
         }
 
@@ -100,18 +143,14 @@ open class EnvironmentTask : DefaultTask() {
             }
         }
 
-    val variables: Map<String, String>?
-        get() {
-            return LinkedHashMap(config.variables).apply {
-                currentEnvVariables.forEach {
-                    put(it.key, it.value.value)
-                }
-            }
-        }
 
-    @Suppress("UNCHECKED_CAST")
+    override fun variable(name: String, variable: Variable) {
+        innerVariables[name] = variable
+    }
+
     fun getVariable(key: String): String {
-        return config.variables?.get(key) ?: currentEnvVariables[key]?.value ?: ""
+        return innerVariables[key]?.value ?: config.getVariable(key) ?: currentEnvVariables[key]?.value
+        ?: ""
     }
 
     private fun getCurrentVariant(): Array<String> {
@@ -243,7 +282,7 @@ open class EnvironmentTask : DefaultTask() {
                         envGenerators.forEach { it.generate() }
 
                         println("PackageVariables:")
-                        config.variables?.forEach {
+                        config.variables.forEach {
                             println("${it.key} : ${it.value}")
                         }
                         println("\nVersionInfo:")

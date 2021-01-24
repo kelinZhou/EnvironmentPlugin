@@ -1,6 +1,7 @@
 package com.kelin.environment.extension
 
 import com.kelin.environment.Variable
+import com.kelin.environment.VariableExtension
 import java.lang.reflect.Type
 
 /**
@@ -12,31 +13,14 @@ import java.lang.reflect.Type
  *
  * **版本:** v 1.0.0
  */
-open class EnvironmentExtension {
-
-    val variables = HashMap<String, Variable>()
+open class EnvironmentExtension : VariableExtension {
 
     var alias = ""
 
-    fun variable(name: String, value: String) {
-        variable(name, value, "String", false)
-    }
+    val variables = HashMap<String, Variable>()
 
-    fun variable(name: String, value: String, placeholder: Boolean) {
-        variable(name, value, "String", placeholder)
-    }
-
-    fun variable(name: String, value: String, type: String) {
-        variable(name, value, type, false)
-    }
-
-    fun variable(name: String, value: String, type: String, placeholder: Boolean) {
-        val fixedType = when {
-            "Int".equals(type, true) -> Int::class.java
-            "Boolean".equals(type, true) -> Boolean::class.java
-            else -> String::class.java
-        }
-        variables[name] = Variable(value, placeholder, fixedType)
+    override fun variable(name: String, variable: Variable) {
+        variables[name] = variable
     }
 
     internal fun getEnvironmentArgs(reference: EnvironmentExtension? = null): String {
@@ -59,7 +43,10 @@ open class EnvironmentExtension {
         }
     }
 
-    fun createManifestPlaceholders(placeholders: MutableMap<String, Any>, reference: EnvironmentExtension? = null) {
+    fun createManifestPlaceholders(
+        placeholders: MutableMap<String, Any>,
+        reference: EnvironmentExtension? = null
+    ) {
         if (reference != null) {
             reference.variables.forEach { v ->
                 (variables[v.key] ?: v.value).run {
