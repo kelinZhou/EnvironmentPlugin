@@ -2,6 +2,7 @@ package com.kelin.environment.extension
 
 import com.kelin.environment.Variable
 import com.kelin.environment.VariableExtension
+import org.gradle.api.tasks.Input
 import java.lang.reflect.Type
 
 /**
@@ -15,6 +16,7 @@ import java.lang.reflect.Type
  */
 open class EnvironmentExtension : VariableExtension {
 
+    @get:Input
     var alias = ""
 
     val variables = HashMap<String, Variable>()

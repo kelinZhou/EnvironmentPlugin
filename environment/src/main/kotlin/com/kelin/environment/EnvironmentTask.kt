@@ -1,11 +1,12 @@
 package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
+import com.android.build.gradle.BaseExtension
 import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -25,16 +26,25 @@ import kotlin.collections.LinkedHashMap
  */
 open class EnvironmentTask : DefaultTask(), VariableExtension {
 
+    @get:Input
     val release = EnvType.RELEASE
+
+    @get:Input
     val dev = EnvType.DEV
+
+    @get:Input
     val test = EnvType.TEST
+
+    @get:Input
     val demo = EnvType.DEMO
 
-
+    @get:Input
     private val innerVariables = HashMap<String, Variable>()
 
-
+    @get:Input
     var online = false
+
+    @get:Input
     var initEnvironment = release
 
     private val envGenerators = ArrayList<GeneratedEnvConfig>()
@@ -51,6 +61,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
         }
     }
 
+    @get:Input
     val appName: String
         get() {
             return when {
@@ -59,6 +70,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    @get:Input
     val appIcon: String
         get() {
             return when {
@@ -67,6 +79,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    @get:Input
     val appRoundIcon: String
         get() {
             return when {
@@ -75,6 +88,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    @get:Input
     val versionCode: Int
         get() {
             return when {
@@ -83,6 +97,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    @get:Input
     val versionName: String
         get() {
             return when {
@@ -104,6 +119,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    @get:Input
     val applicationId: String
         get() {
             return when {
@@ -112,13 +128,14 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    @get:Input
     val variables: Map<String, String>?
         get() {
             return LinkedHashMap<String, String>().apply {
                 innerVariables.forEach {
                     put(it.key, it.value.value)
                 }
-                config.variables.forEach{
+                config.variables.forEach {
                     put(it.key, it.value.value)
                 }
                 currentEnvVariables.forEach {
@@ -223,6 +240,20 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
         val type = info[1]
         println("Channel: ${if (channel.isEmpty()) "unknown" else channel}")
         println("BuildType: $type")
+
+        val baseExtension = project.extensions.findByName("android") as BaseExtension
+
+        if (config.appIcon.isNotEmpty()) {
+            baseExtension.defaultConfig.manifestPlaceholders["APP_ICON"] = config.appIcon
+        }
+        if (config.appRoundIcon.isNotEmpty()) {
+            baseExtension.defaultConfig.manifestPlaceholders["APP_ROUND_ICON"] =
+                config.appRoundIcon
+        }
+        if (config.appName.isNotEmpty()) {
+            baseExtension.defaultConfig.manifestPlaceholders["APP_NAME"] = config.appName
+        }
+
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\n------Generate placeholder for ${variant.name} Beginning------\n")
@@ -267,8 +298,8 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                 variant.generateBuildConfigProvider.get().run {
                     envGenerators.add(
                         GeneratedEnvConfig(
-                            sourceOutputDir.absolutePath,
-                            buildConfigPackageName.get(),
+                            sourceOutputDir.get().toString(),
+                            config.applicationId,
                             initEnvironment,
                             online,
                             variant.versionName ?: "",

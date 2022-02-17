@@ -2,6 +2,7 @@ package com.kelin.environment.extension
 
 import com.kelin.environment.Variable
 import com.kelin.environment.VariableExtension
+import org.gradle.api.tasks.Input
 import java.util.HashMap
 
 /**
@@ -11,16 +12,22 @@ import java.util.HashMap
  *
  * **创建时间:** 2019-09-20  22:25
  *
- * **版本:** v 1.0.0
+ * **版本:** v 1.0.0@Input
  */
 open class PackageConfigExtension : VariableExtension {
-    internal var appIcon = ""
-    internal var appRoundIcon = ""
-    internal var appName = ""
-    internal var versionCode = -1
-    internal var versionName = ""
-    internal var applicationId = ""
-    internal val variables = HashMap<String, Variable>()
+    @get:Input
+    var appIcon = ""
+    @get:Input
+    var appRoundIcon = ""
+    @get:Input
+    var appName = ""
+    @get:Input
+    var versionCode = -1
+    @get:Input
+    var versionName = ""
+    @get:Input
+    var applicationId = ""
+    val variables = HashMap<String, Variable>()
 
     fun appIcon(appIcon: String) {
         this.appIcon = appIcon

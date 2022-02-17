@@ -20,15 +20,6 @@ import org.gradle.api.Project
  */
 class EnvironmentPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val envTask = project.tasks.create("environment", EnvironmentTask::class.java) {
-            it.online = true
-            it.initEnvironment = EnvType.RELEASE
-        }
-//        project.tasks.find {
-//            println("TaskName:${it.name}") //打印所有task的名字
-//            return@find false
-//        }
-        project.tasks.findByName("preBuild")?.dependsOn(envTask)//每当cleanTask执行之后就执行环境配置的Task
 
         project.extensions.create("devConfig", PackageConfigExtension::class.java)
         project.extensions.create("releaseConfig", PackageConfigExtension::class.java)
@@ -37,5 +28,12 @@ class EnvironmentPlugin : Plugin<Project> {
         project.extensions.create("devEnv", EnvironmentExtension::class.java)
         project.extensions.create("testEnv", EnvironmentExtension::class.java)
         project.extensions.create("demoEnv", EnvironmentExtension::class.java)
+
+        val envTask = project.tasks.create("environment", EnvironmentTask::class.java)
+//        project.tasks.find {
+//            println("TaskName:${it.name}") //打印所有task的名字
+//            return@find false
+//        }
+        project.tasks.findByName("preBuild")?.dependsOn(envTask)//每当cleanTask执行之后就执行环境配置的Task
     }
 }
