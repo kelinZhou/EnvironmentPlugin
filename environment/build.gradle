@@ -67,7 +67,7 @@ compileTestKotlin {
 }
 
 ////用来打包到本地仓库
-ublishing {
+publishing {
     repositories {
         maven {
             url = uri('/Users/kelin/mavenRepo')
