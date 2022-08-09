@@ -282,7 +282,11 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                     doLast {
                         envGenerators.forEach { it.generate() }
 
-                        println("PackageVariables:")
+                        println("BaseVariables:")
+                        innerVariables.forEach {
+                            println("${it.key} : ${it.value}")
+                        }
+                        println("\nPackageVariables:")
                         config.variables.forEach {
                             println("${it.key} : ${it.value}")
                         }

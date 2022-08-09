@@ -23,9 +23,12 @@ open class EnvironmentExtension : VariableExtension {
         variables[name] = variable
     }
 
-    internal fun getEnvironmentArgs(allVariables: Map<String, Variable>): String {
+    internal fun getEnvironmentArgs(envName: String, allVariables: Map<String, Variable>): String {
+        println("$envName Environment:")
         return allVariables.entries.joinToString(", ") { entry ->
-            getValueByType((variables[entry.key] ?: entry.value).value, entry.value.type)
+            val variable = variables[entry.key] ?: entry.value
+            println("${entry.key} | $variable  (${variable.placeholder})")
+            getValueByType(variable.value, entry.value.type)
         }
     }
 

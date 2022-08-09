@@ -117,7 +117,7 @@ class GeneratedEnvConfig(
                         Modifier.STATIC,
                         Modifier.FINAL
                     )
-                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs(allVariables)})")
+                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs("Release", allVariables)})")
                         .build()
                 )
                 if (!isRelease) {
@@ -130,7 +130,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs(allVariables)})")
+                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs("Dev", allVariables)})")
                                 .build()
                         )
                     }
@@ -143,7 +143,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs(allVariables)})")
+                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs("Test", allVariables)})")
                                 .build()
                         )
                     }
@@ -156,7 +156,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs(allVariables)})")
+                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs("Demo", allVariables)})")
                                 .build()
                         )
                     }
@@ -284,39 +284,23 @@ class GeneratedEnvConfig(
     }
 
     private fun getEnvironmentMethodCode(): String {
-        println("\nRelease Environment:")
-        release.variables.forEach {
-            println("${it.key} | ${it.value.value}")
-        }
         if (!isRelease) {
             return "switch (curEnvType) {\n" +
                     "    case RELEASE:\n" +
                     "        return RELEASE_ENV;\n" +
                     if (dev.variables.isNotEmpty()) {
-                        println("\nDev Environment:")
-                        dev.variables.forEach {
-                            println("${it.key} | ${it.value.value}")
-                        }
                         "    case DEV:\n" +
                                 "        return DEV_ENV;\n"
                     } else {
                         ""
                     } +
                     if (test.variables.isNotEmpty()) {
-                        println("\nTest Environment:")
-                        test.variables.forEach {
-                            println("${it.key} | ${it.value.value}")
-                        }
                         "    case TEST:\n" +
                                 "        return TEST_ENV;\n"
                     } else {
                         ""
                     } +
                     if (demo.variables.isNotEmpty()) {
-                        println("\nDemo Environment:")
-                        demo.variables.forEach {
-                            println("${it.key} | ${it.value.value}")
-                        }
                         println()
                         "    case DEMO:\n" +
                                 "        return DEMO_ENV;\n"
