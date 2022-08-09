@@ -29,6 +29,8 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.4.1
+优化environment的variables()方法的逻辑，无论任何地方使用variables()方法都将会生成环境变量，如果不同地方有相同的生命则config中的覆盖environment中的，env环境中的覆盖config中的。而placeholder的配置再任意地方配置均会生效。
 #### 1.4.0
 变更方法 releaseConfig和devConfig中使用variable()方法添加编译期的临时变量。 
 #### 1.3.0

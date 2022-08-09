@@ -14,6 +14,8 @@ environment {
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
     initEnvironment demo
 
+    variable 'TEST_BASE_VARIABLE', "base"
+
     releaseConfig {
         appIcon "@mipmap/ic_android"
         appRoundIcon "@mipmap/ic_android"
@@ -30,6 +32,7 @@ environment {
         versionName "2.0.0"
         applicationId packageName
         variable 'APK_BUILD_TYPE', "test"
+        variable 'TEST_BASE_VARIABLE', "base_devConfig"
     }
 
     releaseEnv {
@@ -46,6 +49,9 @@ environment {
         variable "QQ_APP_ID", "1110499891", true
         variable "QQ_APP_KEY", "cmyrDyPBYXDudUtZ"
         variable "HR_SDK_ENV", "4" ,"int"  //4表示华瑞银行sdk为生产环境
+
+
+        variable 'TEST_BASE_VARIABLE', "base_R"
     }
 
     testEnv {
@@ -58,6 +64,8 @@ environment {
         //定位API的路径
         variable "LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/"
         variable "HR_SDK_ENV", "1"  //1表示华瑞银行sdk为SIT环境
+
+        variable 'TEST_BASE_VARIABLE', "base_test"
     }
 
     demoEnv {
@@ -70,6 +78,8 @@ environment {
         //定位API的路径
         variable "LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/"
         variable "HR_SDK_ENV", "2"  //2表示华瑞银行sdk为UAT环境
+
+        variable 'TEST_BASE_VARIABLE', "base_demo"
     }
 }
 

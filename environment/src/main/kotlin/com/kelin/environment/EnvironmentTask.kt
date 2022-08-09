@@ -9,6 +9,7 @@ import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.collections.LinkedHashMap
 
 /**
@@ -112,22 +113,38 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
-    val variables: Map<String, String>?
+    val variables: Map<String, String>
         get() {
             return LinkedHashMap<String, String>().apply {
-                innerVariables.forEach {
-                    put(it.key, it.value.value)
-                }
-                config.variables.forEach{
-                    put(it.key, it.value.value)
-                }
-                currentEnvVariables.forEach {
-                    put(it.key, it.value.value)
-                }
+                putAll(innerVariables.mapValues { it.value.value })
+                putAll(config.variables.mapValues { it.value.value })
+                putAll(currentEnvVariables.mapValues { it.value.value })
             }
         }
 
-    private val currentEnvVariables: Map<String, Variable>
+    private val allVariables: Map<String, Variable>
+        get() {
+            return LinkedHashMap<String, Variable>().apply {
+                putAll(innerVariables)
+                putAll(config.variables)
+                putAll(currentEnvVariables)
+            }
+        }
+
+    private fun fixPlaceholder() {
+        ArrayList(innerVariables.entries).apply {
+            addAll(config.variables.entries)
+            addAll(currentEnvVariables.entries)
+        }.groupBy { it.key }.forEach { group ->
+            if (group.value.size > 1) {
+                group.value.forEach { v ->
+                    v.value.placeholder = group.value.any { entry -> entry.value.placeholder }
+                }
+            }
+        }
+    }
+
+    private val currentEnvVariables: HashMap<String, Variable>
         get() = LinkedHashMap(releaseExt.variables).apply {
             if (online) {
                 releaseExt
@@ -214,7 +231,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                 demoExt.alias = "Demo"
             }
         }
-
+        fixPlaceholder()
         val appExt = project.extensions.findByType(AppExtension::class.java)
         val app = appExt?.applicationVariants
 
@@ -227,28 +244,11 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\n------Generate placeholder for ${variant.name} Beginning------\n")
                 when (initEnvironment) {
-                    EnvType.RELEASE -> {
-                        releaseExt.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders)
-                    }
-                    EnvType.DEV -> {
-                        devExt.createManifestPlaceholders(
-                            variant.mergedFlavor.manifestPlaceholders,
-                            releaseExt
-                        )
-                    }
-                    EnvType.TEST -> {
-                        testExt.createManifestPlaceholders(
-                            variant.mergedFlavor.manifestPlaceholders,
-                            releaseExt
-                        )
-                    }
-                    EnvType.DEMO -> {
-                        demoExt.createManifestPlaceholders(
-                            variant.mergedFlavor.manifestPlaceholders,
-                            releaseExt
-                        )
-                    }
-                }
+                    EnvType.RELEASE -> releaseExt
+                    EnvType.DEV -> devExt
+                    EnvType.TEST -> testExt
+                    EnvType.DEMO -> demoExt
+                }.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, allVariables)
                 if (config.appIcon.isNotEmpty()) {
                     variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
                 }
@@ -272,6 +272,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                             initEnvironment,
                             online,
                             variant.versionName ?: "",
+                            allVariables,
                             releaseExt,
                             devExt,
                             testExt,
@@ -286,8 +287,8 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                             println("${it.key} : ${it.value}")
                         }
                         println("\nVersionInfo:")
-                        println("Code: $versionCode")
-                        println("Name: $versionName")
+                        println("Code: ${versionCode.get()}")
+                        println("Name: ${versionName.get()}")
                         println("\n==========☆★ Environment Plugin End ★☆==========\n")
                     }
                 }

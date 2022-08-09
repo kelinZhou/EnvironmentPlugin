@@ -23,13 +23,10 @@ open class EnvironmentExtension : VariableExtension {
         variables[name] = variable
     }
 
-    internal fun getEnvironmentArgs(reference: EnvironmentExtension? = null): String {
-        return reference?.variables?.let { v ->
-            v.entries.joinToString(", ") { entry ->
-                variables[entry.key]?.let { getValueByType(it.value, entry.value.type) }
-                    ?: entry.value.let { getValueByType(it.value, it.type) }
-            }
-        } ?: variables.values.joinToString(", ") { getValueByType(it.value, it.type) }
+    internal fun getEnvironmentArgs(allVariables: Map<String, Variable>): String {
+        return allVariables.entries.joinToString(", ") { entry ->
+            getValueByType((variables[entry.key] ?: entry.value).value, entry.value.type)
+        }
     }
 
     private fun getValueByType(value: String, type: Type): String {
@@ -45,21 +42,11 @@ open class EnvironmentExtension : VariableExtension {
 
     fun createManifestPlaceholders(
         placeholders: MutableMap<String, Any>,
-        reference: EnvironmentExtension? = null
+        allVariables: Map<String, Variable>
     ) {
-        if (reference != null) {
-            reference.variables.forEach { v ->
-                (variables[v.key] ?: v.value).run {
-                    if (v.value.placeholder) {
-                        placeholders[v.key] = value
-                    }
-                }
-            }
-        } else {
-            variables.forEach { v ->
-                if (v.value.placeholder) {
-                    placeholders[v.key] = v.value.value
-                }
+        allVariables.entries.forEach { entry ->
+            if (entry.value.placeholder) {
+                placeholders[entry.key] = (variables[entry.key] ?: entry.value).value
             }
         }
     }

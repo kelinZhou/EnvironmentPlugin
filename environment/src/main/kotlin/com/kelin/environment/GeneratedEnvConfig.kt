@@ -23,6 +23,7 @@ class GeneratedEnvConfig(
     private val environment: EnvType,
     private val isRelease: Boolean,
     private val version: String,
+    private val allVariables: Map<String, Variable>,
     private val release: EnvironmentExtension,
     private val dev: EnvironmentExtension,
     private val test: EnvironmentExtension,
@@ -30,7 +31,7 @@ class GeneratedEnvConfig(
 ) {
 
     internal fun generate() {
-        val parameters = writeEnvironmentInterface(release, packageName, filePath)
+        val parameters = writeEnvironmentInterface(allVariables, packageName, filePath)
         val typeType = ClassName.get(packageName, CONFIG_NAME, "Type")
         val nameOf = MethodSpec.methodBuilder("nameOf")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
@@ -57,8 +58,6 @@ class GeneratedEnvConfig(
         val applicationType = ClassName.get("android.app", "Application")
 
 
-
-
         val environmentImpl = TypeSpec.classBuilder("${ENVIRONMENT_NAME}Impl")
             .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
             .superclass(environmentType)
@@ -77,24 +76,48 @@ class GeneratedEnvConfig(
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addJavadoc("**Description:** configure the environment.(Automatically generated file. DO NOT MODIFY)。\n<p>\n**Version:** v $version\n")
             .addField(
-                FieldSpec.builder(Boolean::class.java, "IS_RELEASE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                FieldSpec.builder(
+                    Boolean::class.java,
+                    "IS_RELEASE",
+                    Modifier.PUBLIC,
+                    Modifier.STATIC,
+                    Modifier.FINAL
+                )
                     .initializer("Boolean.parseBoolean(\"$isRelease\")")
                     .build()
             )
             .addField(
-                FieldSpec.builder(Boolean::class.java, "IS_DEBUG", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                FieldSpec.builder(
+                    Boolean::class.java,
+                    "IS_DEBUG",
+                    Modifier.PUBLIC,
+                    Modifier.STATIC,
+                    Modifier.FINAL
+                )
                     .initializer("Boolean.parseBoolean(\"${!isRelease}\")")
                     .build()
             )
             .addField(
-                FieldSpec.builder(typeType, "INIT_ENV", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                FieldSpec.builder(
+                    typeType,
+                    "INIT_ENV",
+                    Modifier.PUBLIC,
+                    Modifier.STATIC,
+                    Modifier.FINAL
+                )
                     .initializer("Type.nameOf(\"$environment\")")
                     .build()
             )
             .apply {
                 addField(
-                    FieldSpec.builder(environmentType, "RELEASE_ENV", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs()})")
+                    FieldSpec.builder(
+                        environmentType,
+                        "RELEASE_ENV",
+                        Modifier.PRIVATE,
+                        Modifier.STATIC,
+                        Modifier.FINAL
+                    )
+                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs(allVariables)})")
                         .build()
                 )
                 if (!isRelease) {
@@ -107,7 +130,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs(release)})")
+                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs(allVariables)})")
                                 .build()
                         )
                     }
@@ -120,7 +143,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs(release)})")
+                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs(allVariables)})")
                                 .build()
                         )
                     }
@@ -133,7 +156,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs(release)})")
+                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs(allVariables)})")
                                 .build()
                         )
                     }
@@ -163,7 +186,10 @@ class GeneratedEnvConfig(
                     .addParameter(applicationType, "app")
                     .apply {
                         if (!isRelease) {
-                            addStatement(getInitMethodCode(), ClassName.get("android.preference", "PreferenceManager"))
+                            addStatement(
+                                getInitMethodCode(),
+                                ClassName.get("android.preference", "PreferenceManager")
+                            )
                         }
                     }
                     .build()
@@ -193,17 +219,29 @@ class GeneratedEnvConfig(
             .addType(
                 TypeSpec.enumBuilder("Type")
                     .addModifiers(Modifier.PUBLIC)
-                    .addEnumConstant("RELEASE", TypeSpec.anonymousClassBuilder("\"${release.alias}\"").build())
+                    .addEnumConstant(
+                        "RELEASE",
+                        TypeSpec.anonymousClassBuilder("\"${release.alias}\"").build()
+                    )
                     .apply {
                         if (!isRelease) {
                             if (dev.variables.isNotEmpty()) {
-                                addEnumConstant("DEV", TypeSpec.anonymousClassBuilder("\"${dev.alias}\"").build())
+                                addEnumConstant(
+                                    "DEV",
+                                    TypeSpec.anonymousClassBuilder("\"${dev.alias}\"").build()
+                                )
                             }
                             if (test.variables.isNotEmpty()) {
-                                addEnumConstant("TEST", TypeSpec.anonymousClassBuilder("\"${test.alias}\"").build())
+                                addEnumConstant(
+                                    "TEST",
+                                    TypeSpec.anonymousClassBuilder("\"${test.alias}\"").build()
+                                )
                             }
                             if (demo.variables.isNotEmpty()) {
-                                addEnumConstant("DEMO", TypeSpec.anonymousClassBuilder("\"${demo.alias}\"").build())
+                                addEnumConstant(
+                                    "DEMO",
+                                    TypeSpec.anonymousClassBuilder("\"${demo.alias}\"").build()
+                                )
                             }
                         }
                     }
@@ -294,19 +332,25 @@ class GeneratedEnvConfig(
     }
 
     private fun writeEnvironmentInterface(
-        env: EnvironmentExtension,
+        variables: Map<String, Variable>,
         packageName: String,
         filePath: String
     ): List<Pair<Type, String>> {
-        val variables = env.variables
         val parameters = ArrayList<Pair<Type, String>>(variables.size)
         val fields = ArrayList<FieldSpec>(variables.size)
         val constructor = MethodSpec.constructorBuilder()
             .addModifiers(Modifier.PROTECTED)
         val entries = variables.entries
-        for (i: Int in 0 until entries.size) {
+        for (i: Int in entries.indices) {
             val entry = entries.elementAt(i)
-            fields.add(FieldSpec.builder(entry.value.type, entry.key, Modifier.PUBLIC, Modifier.FINAL).build())
+            fields.add(
+                FieldSpec.builder(
+                    entry.value.type,
+                    entry.key,
+                    Modifier.PUBLIC,
+                    Modifier.FINAL
+                ).build()
+            )
             constructor.addParameter(entry.value.type, "var$i")
                 .addStatement("\$N = \$N", entry.key, "var$i")
             parameters.add(Pair(entry.value.type, "var$i"))

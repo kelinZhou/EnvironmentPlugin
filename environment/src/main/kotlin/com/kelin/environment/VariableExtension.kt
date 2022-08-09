@@ -27,6 +27,7 @@ interface VariableExtension {
         val fixedType = when {
             "Int".equals(type, true) -> Int::class.java
             "Boolean".equals(type, true) -> Boolean::class.java
+            "Double".equals(type, true) -> Double::class.java
             else -> String::class.java
         }
         variable(name, Variable(value, placeholder, fixedType))
