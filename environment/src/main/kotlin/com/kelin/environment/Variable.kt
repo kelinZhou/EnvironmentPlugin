@@ -12,4 +12,4 @@ import java.lang.reflect.Type
  *
  * **版本:** v 1.0.0
  */
-data class Variable(val value: String, val placeholder: Boolean, val type: Type) : Serializable
+data class Variable(val value: String, var placeholder: Boolean, val type: Type) : Serializable
