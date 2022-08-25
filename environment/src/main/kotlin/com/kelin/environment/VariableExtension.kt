@@ -30,8 +30,8 @@ interface VariableExtension {
             "Double".equals(type, true) -> Double::class.java
             else -> String::class.java
         }
-        variable(name, Variable(value, placeholder, fixedType))
+        variable(name, EnvValue(value, placeholder, fixedType))
     }
 
-    fun variable(name: String, variable: Variable)
+    fun variable(name: String, value: EnvValue)
 }

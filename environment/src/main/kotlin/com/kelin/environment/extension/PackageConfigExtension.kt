@@ -1,6 +1,6 @@
 package com.kelin.environment.extension
 
-import com.kelin.environment.Variable
+import com.kelin.environment.EnvValue
 import com.kelin.environment.VariableExtension
 import org.gradle.api.tasks.Input
 import java.util.HashMap
@@ -27,7 +27,8 @@ open class PackageConfigExtension : VariableExtension {
     var versionName = ""
     @get:Input
     var applicationId = ""
-    val variables = HashMap<String, Variable>()
+
+    internal val variables = HashMap<String, EnvValue>()
 
     fun appIcon(appIcon: String) {
         this.appIcon = appIcon
@@ -53,8 +54,8 @@ open class PackageConfigExtension : VariableExtension {
         this.applicationId = applicationId
     }
 
-    override fun variable(name: String, variable: Variable) {
-        variables[name] = variable
+    override fun variable(name: String, value: EnvValue) {
+        variables[name] = value
     }
 
     fun getVariable(name: String): String? {
