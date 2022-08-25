@@ -1,6 +1,6 @@
 package com.kelin.environment.extension
 
-import com.kelin.environment.Variable
+import com.kelin.environment.EnvValue
 import com.kelin.environment.VariableExtension
 import java.lang.reflect.Type
 
@@ -17,13 +17,13 @@ open class EnvironmentExtension : VariableExtension {
 
     var alias = ""
 
-    val variables = HashMap<String, Variable>()
+    val variables = HashMap<String, EnvValue>()
 
-    override fun variable(name: String, variable: Variable) {
-        variables[name] = variable
+    override fun variable(name: String, value: EnvValue) {
+        variables[name] = value
     }
 
-    internal fun getEnvironmentArgs(envName: String, allVariables: Map<String, Variable>): String {
+    internal fun getEnvironmentArgs(envName: String, allVariables: Map<String, EnvValue>): String {
         println("$envName Environment:")
         return allVariables.entries.joinToString(", ") { entry ->
             val variable = variables[entry.key] ?: entry.value
@@ -45,7 +45,7 @@ open class EnvironmentExtension : VariableExtension {
 
     fun createManifestPlaceholders(
         placeholders: MutableMap<String, Any>,
-        allVariables: Map<String, Variable>
+        allVariables: Map<String, EnvValue>
     ) {
         allVariables.entries.forEach { entry ->
             if (entry.value.placeholder) {

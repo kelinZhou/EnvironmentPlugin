@@ -1,5 +1,4 @@
 buildscript {
-    ext.kotlin_version = '1.4.10'
     repositories {
         mavenCentral()
     }
@@ -19,7 +18,7 @@ plugins {
 }
 
 group = 'com.kelin.environment'
-version = '1.4.1'
+version = '1.5.1'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8

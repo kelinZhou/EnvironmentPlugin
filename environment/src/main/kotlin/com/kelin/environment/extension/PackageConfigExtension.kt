@@ -1,6 +1,6 @@
 package com.kelin.environment.extension
 
-import com.kelin.environment.Variable
+import com.kelin.environment.EnvValue
 import com.kelin.environment.VariableExtension
 import java.util.HashMap
 
@@ -20,7 +20,7 @@ open class PackageConfigExtension : VariableExtension {
     internal var versionCode = -1
     internal var versionName = ""
     internal var applicationId = ""
-    internal val variables = HashMap<String, Variable>()
+    internal val variables = HashMap<String, EnvValue>()
 
     fun appIcon(appIcon: String) {
         this.appIcon = appIcon
@@ -46,8 +46,8 @@ open class PackageConfigExtension : VariableExtension {
         this.applicationId = applicationId
     }
 
-    override fun variable(name: String, variable: Variable) {
-        variables[name] = variable
+    override fun variable(name: String, value: EnvValue) {
+        variables[name] = value
     }
 
     fun getVariable(name: String): String? {

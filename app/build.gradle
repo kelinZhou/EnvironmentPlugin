@@ -16,6 +16,9 @@ environment {
 
     variable 'TEST_BASE_VARIABLE', "base"
 
+    constant 'IS_CONSTANT', 'true', 'Boolean', true
+    constant 'IS_CONSTANT_VALUE', 'false', 'Boolean'
+
     releaseConfig {
         appIcon "@mipmap/ic_android"
         appRoundIcon "@mipmap/ic_android"
@@ -48,7 +51,7 @@ environment {
         variable "WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06"
         variable "QQ_APP_ID", "1110499891", true
         variable "QQ_APP_KEY", "cmyrDyPBYXDudUtZ"
-        variable "HR_SDK_ENV", "4" ,"int"  //4表示华瑞银行sdk为生产环境
+        variable "HR_SDK_ENV", "4" ,"int"
 
 
         variable 'TEST_BASE_VARIABLE', "base_R"
@@ -63,7 +66,7 @@ environment {
         variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
         //定位API的路径
         variable "LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/"
-        variable "HR_SDK_ENV", "1"  //1表示华瑞银行sdk为SIT环境
+        variable "HR_SDK_ENV", "1"
 
         variable 'TEST_BASE_VARIABLE', "base_test"
     }
@@ -77,7 +80,7 @@ environment {
         variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
         //定位API的路径
         variable "LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/"
-        variable "HR_SDK_ENV", "2"  //2表示华瑞银行sdk为UAT环境
+        variable "HR_SDK_ENV", "2"
 
         variable 'TEST_BASE_VARIABLE', "base_demo"
     }
@@ -95,7 +98,6 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        println("=========${environment.variables}")
         println("=========${environment.getVariable("API_BASE_URL")}")
     }
 

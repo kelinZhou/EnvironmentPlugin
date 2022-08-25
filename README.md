@@ -29,6 +29,9 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.5.1
+environment 增加constants()方法用于声明常量,声明的常量可以直接通过EnvConfig.XXX的方式调用，constants()的用法与variables()的用法一致。
+
 #### 1.4.1
 优化environment的variables()方法的逻辑，无论任何地方使用variables()方法都将会生成环境变量，如果不同地方有相同的生命则config中的覆盖environment中的，env环境中的覆盖config中的。而placeholder的配置再任意地方配置均会生效。
 #### 1.4.0
