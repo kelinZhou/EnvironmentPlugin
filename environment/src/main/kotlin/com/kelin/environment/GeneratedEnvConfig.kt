@@ -6,6 +6,8 @@ import java.io.File
 import javax.lang.model.element.Modifier
 import com.squareup.javapoet.MethodSpec
 import java.lang.reflect.Type
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -23,7 +25,8 @@ class GeneratedEnvConfig(
     private val environment: EnvType,
     private val isRelease: Boolean,
     private val version: String,
-    private val allVariables: Map<String, Variable>,
+    private val constants: Map<String, EnvValue>,
+    private val allVariables: Map<String, EnvValue>,
     private val release: EnvironmentExtension,
     private val dev: EnvironmentExtension,
     private val test: EnvironmentExtension,
@@ -96,7 +99,21 @@ class GeneratedEnvConfig(
                 )
                     .initializer("Boolean.parseBoolean(\"${!isRelease}\")")
                     .build()
-            )
+            ).apply {
+                constants.forEach {
+                    addField(
+                        FieldSpec.builder(
+                            it.value.type,
+                            it.key.toUpperCase(Locale.US),
+                            Modifier.PUBLIC,
+                            Modifier.STATIC,
+                            Modifier.FINAL
+                        )
+                            .initializer(it.value.typedValue)
+                            .build()
+                    )
+                }
+            }
             .addField(
                 FieldSpec.builder(
                     typeType,
@@ -316,7 +333,7 @@ class GeneratedEnvConfig(
     }
 
     private fun writeEnvironmentInterface(
-        variables: Map<String, Variable>,
+        variables: Map<String, EnvValue>,
         packageName: String,
         filePath: String
     ): List<Pair<Type, String>> {

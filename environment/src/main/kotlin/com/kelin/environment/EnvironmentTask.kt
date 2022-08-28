@@ -26,7 +26,7 @@ import kotlin.collections.LinkedHashMap
  *
  * **版本:** v 1.0.0
  */
-open class EnvironmentTask : DefaultTask(), VariableExtension {
+open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtension {
 
     @get:Input
     val release = EnvType.RELEASE
@@ -41,7 +41,8 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
     val demo = EnvType.DEMO
 
 
-    private val innerVariables = HashMap<String, Variable>()
+    private val innerVariables = HashMap<String, EnvValue>()
+    private val innerConstants = HashMap<String, EnvValue>()
 
     @get:Input
     var online = false
@@ -130,19 +131,9 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
-    @get:Input
-    val variables: Map<String, String>
+    private val allVariables: Map<String, EnvValue>
         get() {
-            return LinkedHashMap<String, String>().apply {
-                putAll(innerVariables.mapValues { it.value.value })
-                putAll(config.variables.mapValues { it.value.value })
-                putAll(currentEnvVariables.mapValues { it.value.value })
-            }
-        }
-
-    private val allVariables: Map<String, Variable>
-        get() {
-            return LinkedHashMap<String, Variable>().apply {
+            return LinkedHashMap<String, EnvValue>().apply {
                 putAll(innerVariables)
                 putAll(config.variables)
                 putAll(currentEnvVariables)
@@ -162,7 +153,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
         }
     }
 
-    private val currentEnvVariables: HashMap<String, Variable>
+    private val currentEnvVariables: HashMap<String, EnvValue>
         get() = LinkedHashMap(releaseExt.variables).apply {
             if (online) {
                 releaseExt
@@ -178,9 +169,12 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
             }
         }
 
+    override fun constant(name: String, value: EnvValue) {
+        innerConstants[name] = value
+    }
 
-    override fun variable(name: String, variable: Variable) {
-        innerVariables[name] = variable
+    override fun variable(name: String, value: EnvValue) {
+        innerVariables[name] = value
     }
 
     fun getVariable(key: String): String {
@@ -188,7 +182,11 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
         ?: ""
     }
 
-    private fun getCurrentVariant(): Array<String> {
+    fun getConstant(key: String): String {
+        return innerConstants[key]?.value ?: ""
+    }
+
+    private fun getCurrentVariant(): Pair<String, String> {
         val taskRequests = project.gradle.startParameter.taskRequests
         val tskReqStr = taskRequests.toString()
         println("startParameter:$tskReqStr")
@@ -215,7 +213,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                 ""
             }
         }
-        return arrayOf(
+        return Pair(
             channel,
             if (tskReqStr.toLowerCase(Locale.getDefault())
                     .contains("release") || tskReqStr.contains(
@@ -254,31 +252,38 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
         val app = appExt?.applicationVariants
 
         val info = getCurrentVariant()
-        val channel = info[0]
-        val type = info[1]
+        val channel = info.first
+        val type = info.second
         println("Channel: ${if (channel.isEmpty()) "unknown" else channel}")
         println("BuildType: $type")
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\n------Generate placeholder for ${variant.name} Beginning------\n")
-                when (initEnvironment) {
-                    EnvType.RELEASE -> releaseExt
-                    EnvType.DEV -> devExt
-                    EnvType.TEST -> testExt
-                    EnvType.DEMO -> demoExt
-                }.createManifestPlaceholders(variant.mergedFlavor.manifestPlaceholders, allVariables)
-                if (config.appIcon.isNotEmpty()) {
-                    variant.mergedFlavor.manifestPlaceholders["APP_ICON"] = config.appIcon
-                }
-                if (config.appRoundIcon.isNotEmpty()) {
-                    variant.mergedFlavor.manifestPlaceholders["APP_ROUND_ICON"] =
-                        config.appRoundIcon
-                }
-                if (config.appName.isNotEmpty()) {
-                    variant.mergedFlavor.manifestPlaceholders["APP_NAME"] = config.appName
-                }
-                variant.mergedFlavor.manifestPlaceholders.forEach {
-                    println("${it.key} : ${it.value}")
+                variant.mergedFlavor.manifestPlaceholders.also { manifestPlaceholders ->
+                    if (config.appIcon.isNotEmpty()) {
+                        manifestPlaceholders["APP_ICON"] = config.appIcon
+                    }
+                    if (config.appRoundIcon.isNotEmpty()) {
+                        manifestPlaceholders["APP_ROUND_ICON"] =
+                            config.appRoundIcon
+                    }
+                    if (config.appName.isNotEmpty()) {
+                        manifestPlaceholders["APP_NAME"] = config.appName
+                    }
+                    innerConstants.forEach {
+                        if (it.value.placeholder) {
+                            manifestPlaceholders[it.key.toUpperCase(Locale.US)] = it.value.value
+                        }
+                    }
+                    when (initEnvironment) {
+                        EnvType.RELEASE -> releaseExt
+                        EnvType.DEV -> devExt
+                        EnvType.TEST -> testExt
+                        EnvType.DEMO -> demoExt
+                    }.createManifestPlaceholders(manifestPlaceholders, allVariables)
+                    manifestPlaceholders.forEach {
+                        println("${it.key} : ${it.value}")
+                    }
                 }
                 println("\n------Generate placeholder for ${variant.name} End------\n")
 
@@ -290,6 +295,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                             initEnvironment,
                             online,
                             variant.versionName ?: "",
+                            innerConstants,
                             allVariables,
                             releaseExt,
                             devExt,
@@ -300,7 +306,12 @@ open class EnvironmentTask : DefaultTask(), VariableExtension {
                     doLast {
                         envGenerators.forEach { it.generate() }
 
-                        println("BaseVariables:")
+                        println("Generated Constants:")
+                        innerConstants.forEach {
+                            println("${it.key} : ${it.value}")
+                        }
+
+                        println("\nBaseVariables:")
                         innerVariables.forEach {
                             println("${it.key} : ${it.value}")
                         }
