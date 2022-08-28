@@ -14,12 +14,12 @@ plugins {
     id 'kotlin'
     id 'java-gradle-plugin'
     id 'maven-publish'
-    id 'groovy'
+//    id 'groovy'
     id "com.gradle.plugin-publish" version "0.11.0"
 }
 
 group = 'com.kelin.environment'
-version = '1.4.0'
+version = '1.0.0.0'
 
 sourceCompatibility = JavaVersion.VERSION_11
 targetCompatibility = JavaVersion.VERSION_11
@@ -47,7 +47,7 @@ pluginBundle {
 gradlePlugin {
     plugins {
         environmentPlugin {
-            id = 'com.kelin.environment'
+            id = 'com.kelin.environment-gradle7'
             displayName = 'Environment build Plugin'
             description = 'use this to configuration your api environment.'
             implementationClass = 'com.kelin.environment.EnvironmentPlugin'
@@ -66,7 +66,7 @@ compileTestKotlin {
     }
 }
 
-////用来打包到本地仓库
+//////用来打包到本地仓库
 publishing {
     repositories {
         maven {
