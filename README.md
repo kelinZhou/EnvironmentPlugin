@@ -29,6 +29,9 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.5.5
+environment 增加manifestPlaceholders成员，由于插件有些时候生成manifestPlaceholders不起作用，该成员方便从gradle中配置。
+
 #### 1.5.1
 environment 增加constants()方法用于声明常量,声明的常量可以直接通过EnvConfig.XXX的方式调用，constants()的用法与variables()的用法一致。
 
