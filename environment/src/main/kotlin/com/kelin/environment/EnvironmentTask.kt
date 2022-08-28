@@ -1,7 +1,6 @@
 package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
-import com.android.build.gradle.BaseExtension
 import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
@@ -39,6 +38,32 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
 
     @get:Input
     val demo = EnvType.DEMO
+
+    @get:Input
+    val manifestPlaceholders: MutableMap<String, Any>
+        get() = LinkedHashMap<String, Any>().apply {
+            if (config.appIcon.isNotEmpty()) {
+                this["APP_ICON"] = config.appIcon
+            }
+            if (config.appRoundIcon.isNotEmpty()) {
+                this["APP_ROUND_ICON"] =
+                    config.appRoundIcon
+            }
+            if (config.appName.isNotEmpty()) {
+                this["APP_NAME"] = config.appName
+            }
+            innerConstants.forEach {
+                if (it.value.placeholder) {
+                    this[it.key.toUpperCase(Locale.US)] = it.value.value
+                }
+            }
+            when (initEnvironment) {
+                EnvType.RELEASE -> releaseExt
+                EnvType.DEV -> devExt
+                EnvType.TEST -> testExt
+                EnvType.DEMO -> demoExt
+            }.createManifestPlaceholders(this, allVariables)
+        }
 
 
     private val innerVariables = HashMap<String, EnvValue>()
@@ -178,7 +203,8 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
     }
 
     fun getVariable(key: String): String {
-        return innerVariables[key]?.value ?: config.getVariable(key) ?: currentEnvVariables[key]?.value
+        return innerVariables[key]?.value ?: config.getVariable(key)
+        ?: currentEnvVariables[key]?.value
         ?: ""
     }
 
@@ -254,33 +280,13 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
         val info = getCurrentVariant()
         val channel = info.first
         val type = info.second
-        println("Channel: ${if (channel.isEmpty()) "unknown" else channel}")
+        println("Channel: ${channel.ifEmpty { "unknown" }}")
         println("BuildType: $type")
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\n------Generate placeholder for ${variant.name} Beginning------\n")
                 variant.mergedFlavor.manifestPlaceholders.also { manifestPlaceholders ->
-                    if (config.appIcon.isNotEmpty()) {
-                        manifestPlaceholders["APP_ICON"] = config.appIcon
-                    }
-                    if (config.appRoundIcon.isNotEmpty()) {
-                        manifestPlaceholders["APP_ROUND_ICON"] =
-                            config.appRoundIcon
-                    }
-                    if (config.appName.isNotEmpty()) {
-                        manifestPlaceholders["APP_NAME"] = config.appName
-                    }
-                    innerConstants.forEach {
-                        if (it.value.placeholder) {
-                            manifestPlaceholders[it.key.toUpperCase(Locale.US)] = it.value.value
-                        }
-                    }
-                    when (initEnvironment) {
-                        EnvType.RELEASE -> releaseExt
-                        EnvType.DEV -> devExt
-                        EnvType.TEST -> testExt
-                        EnvType.DEMO -> demoExt
-                    }.createManifestPlaceholders(manifestPlaceholders, allVariables)
+                    manifestPlaceholders.putAll(this.manifestPlaceholders)
                     manifestPlaceholders.forEach {
                         println("${it.key} : ${it.value}")
                     }

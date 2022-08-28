@@ -4,102 +4,103 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
-apply plugin: "com.kelin.environment"
+apply plugin: "com.kelin.environment-gradle7"
 
 
-//environment {
-//    //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
-//    online false
-//
-//    //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
-//    initEnvironment demo
-//
-//    variable 'TEST_BASE_VARIABLE', "base"
-//
-//    constant 'IS_CONSTANT', 'true', 'Boolean', true
-//    constant 'IS_CONSTANT_VALUE', 'false', 'Boolean'
-//
-//    releaseConfig {
-//        appIcon "@mipmap/ic_android"
-//        appRoundIcon "@mipmap/ic_android"
-//        appName "EnvPlugin"
-//        versionName "1.0.0"
-//        applicationId "${packageName}.test"
-//        variable 'APK_BUILD_TYPE', "release"
-//    }
-//
-//    devConfig {
-//        appIcon "@mipmap/ic_launcher"
-//        appRoundIcon "@mipmap/ic_launcher"
-//        appName "@string/app_name"
-//        versionName "2.0.0"
-//        applicationId packageName
-//        variable 'APK_BUILD_TYPE', "test"
-//        variable 'TEST_BASE_VARIABLE', "base_devConfig"
-//    }
-//
-//    releaseEnv {
-//        alias "生产"
-//
-//        variable "API_BASE_URL", "https://iyx.smart.api.intelliyx.com/"
-//        variable "API_VERSION", ""
-//        variable "BANK_SDK_APP_ID", "3031266f-54a8-46dd-ba47-2a0d516df29b"
-//        variable "BANK_SDK_APP_SECRET", "f4db09cf-80b2-4d3f-bda1-997ab41a3754"
-//        //定位API的路径
-//        variable "LOCATE_URL", "https://iyx.smart.api.intelliyx.com/api/v1/"
-//        variable "WE_CHAT_APP_ID", "wxf21bd8885522192d"
-//        variable "WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06"
-//        variable "QQ_APP_ID", "1110499891", true
-//        variable "QQ_APP_KEY", "cmyrDyPBYXDudUtZ"
-//        variable "HR_SDK_ENV", "4" ,"int"
-//
-//
-//        variable 'TEST_BASE_VARIABLE', "base_R"
-//    }
-//
-//    testEnv {
-//        alias "测试"
-//
-//        variable "API_BASE_URL", "http://sit.tms.api.yuchuanglian.com/"
-//        variable "API_VERSION", "180530"
-//        variable "BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10"
-//        variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
-//        //定位API的路径
-//        variable "LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/"
-//        variable "HR_SDK_ENV", "1"
-//
-//        variable 'TEST_BASE_VARIABLE', "base_test"
-//    }
-//
-//    demoEnv {
-//        alias "预发"
-//
-//        variable "API_BASE_URL", "http://uat.tms.api.yuchuanglian.com/"
-//        variable "API_VERSION", "180530"
-//        variable "BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10"
-//        variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
-//        //定位API的路径
-//        variable "LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/"
-//        variable "HR_SDK_ENV", "2"
-//
-//        variable 'TEST_BASE_VARIABLE', "base_demo"
-//    }
-//}
+environment {
+    //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
+    online false
+
+    //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
+    initEnvironment demo
+
+    variable 'TEST_BASE_VARIABLE', "base"
+
+    constant 'IS_CONSTANT', 'true', 'Boolean', true
+    constant 'IS_CONSTANT_VALUE', 'false', 'Boolean'
+
+    releaseConfig {
+        appIcon = "@mipmap/ic_android"
+        appRoundIcon = "@mipmap/ic_android"
+        appName = "EnvPlugin"
+        versionName = "1.0.0"
+        applicationId = "${packageName}.test"
+        variable 'APK_BUILD_TYPE', "release"
+    }
+
+    devConfig {
+        appIcon = "@mipmap/ic_launcher"
+        appRoundIcon = "@mipmap/ic_launcher"
+        appName = "@string/app_name"
+        versionName = "2.0.0"
+        applicationId = packageName
+        variable 'APK_BUILD_TYPE', "test"
+        variable 'TEST_BASE_VARIABLE', "base_devConfig"
+    }
+
+    releaseEnv {
+        alias "生产"
+
+        variable "API_BASE_URL", "https://iyx.smart.api.intelliyx.com/"
+        variable "API_VERSION", ""
+        variable "BANK_SDK_APP_ID", "3031266f-54a8-46dd-ba47-2a0d516df29b"
+        variable "BANK_SDK_APP_SECRET", "f4db09cf-80b2-4d3f-bda1-997ab41a3754"
+        //定位API的路径
+        variable "LOCATE_URL", "https://iyx.smart.api.intelliyx.com/api/v1/"
+        variable "WE_CHAT_APP_ID", "wxf21bd8885522192d"
+        variable "WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06"
+        variable "QQ_APP_ID", "1110499891", true
+        variable "QQ_APP_KEY", "cmyrDyPBYXDudUtZ"
+        variable "HR_SDK_ENV", "4", "int"
+
+
+        variable 'TEST_BASE_VARIABLE', "base_R"
+    }
+
+    testEnv {
+        alias "测试"
+
+        variable "API_BASE_URL", "http://sit.tms.api.yuchuanglian.com/"
+        variable "API_VERSION", "180530"
+        variable "BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10"
+        variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
+        //定位API的路径
+        variable "LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/"
+        variable "HR_SDK_ENV", "1"
+
+        variable 'TEST_BASE_VARIABLE', "base_test"
+    }
+
+    demoEnv {
+        alias "预发"
+
+        variable "API_BASE_URL", "http://uat.tms.api.yuchuanglian.com/"
+        variable "API_VERSION", "180530"
+        variable "BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10"
+        variable "BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809"
+        variable "QQ_APP_ID", "12345678", true
+        //定位API的路径
+        variable "LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/"
+        variable "HR_SDK_ENV", "2"
+
+        variable 'TEST_BASE_VARIABLE', "base_demo"
+    }
+}
 
 android {
-
     compileSdkVersion 31
     defaultConfig {
         versionCode 100
-        versionName "environment.versionName"
-        applicationId "environment.applicationId"
+        versionName environment.versionName
+        applicationId environment.applicationId
         minSdkVersion 14
         targetSdkVersion 31
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-        println("=========${environment.variables}")
-        println("=========${environment.getVariable("API_BASE_URL")}")
+        println("打印${environment.manifestPlaceholders}")
+
+        manifestPlaceholders = environment.manifestPlaceholders
     }
 
     signingConfigs {
@@ -129,23 +130,23 @@ android {
     }
 
 
-    //支持多渠道配置。
-    flavorDimensions "default"
-    productFlavors {
-        for (channel in file('./channels')) {
-            if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
-                "$channel" {
-                    //JPush的固定字段
-                    manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
-                    buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
-                    dimension "default"
-                }
-                if (!environment.release) {
-                    break
-                }
-            }
-        }
-    }
+//    //支持多渠道配置。
+//    flavorDimensions "default"
+//    productFlavors {
+//        for (channel in file('./channels')) {
+//            if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
+//                "$channel" {
+//                    //JPush的固定字段
+//                    manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
+//                    buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
+//                    dimension "default"
+//                }
+//                if (!environment.release) {
+//                    break
+//                }
+//            }
+//        }
+//    }
 }
 
 
