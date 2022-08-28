@@ -46,19 +46,9 @@ open class EnvironmentExtension : VariableExtension {
         placeholders: MutableMap<String, Any>,
         allVariables: Map<String, Variable>
     ) {
-        if (reference != null) {
-            reference.variables.forEach { v ->
-                (variables[v.key] ?: v.value).run {
-                    if (v.value.placeholder) {
-                        placeholders[v.key] = value
-                    }
-                }
-            }
-        } else {
-            variables.forEach { v ->
-                if (v.value.placeholder) {
-                    placeholders[v.key] = v.value.value
-                }
+        allVariables.entries.forEach { entry ->
+            if (entry.value.placeholder) {
+                placeholders[entry.key] = (variables[entry.key] ?: entry.value).value
             }
         }
     }
