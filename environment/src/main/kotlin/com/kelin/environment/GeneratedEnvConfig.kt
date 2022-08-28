@@ -23,6 +23,7 @@ class GeneratedEnvConfig(
     private val environment: EnvType,
     private val isRelease: Boolean,
     private val version: String,
+    private val allVariables: Map<String, Variable>,
     private val release: EnvironmentExtension,
     private val dev: EnvironmentExtension,
     private val test: EnvironmentExtension,
@@ -93,8 +94,14 @@ class GeneratedEnvConfig(
             )
             .apply {
                 addField(
-                    FieldSpec.builder(environmentType, "RELEASE_ENV", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs()})")
+                    FieldSpec.builder(
+                        environmentType,
+                        "RELEASE_ENV",
+                        Modifier.PRIVATE,
+                        Modifier.STATIC,
+                        Modifier.FINAL
+                    )
+                        .initializer("new EnvironmentImpl(${release.getEnvironmentArgs(allVariables)})")
                         .build()
                 )
                 if (!isRelease) {
@@ -107,7 +114,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs(release)})")
+                                .initializer("new EnvironmentImpl(${dev.getEnvironmentArgs(allVariables)})")
                                 .build()
                         )
                     }
@@ -120,7 +127,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs(release)})")
+                                .initializer("new EnvironmentImpl(${test.getEnvironmentArgs(allVariables)})")
                                 .build()
                         )
                     }
@@ -133,7 +140,7 @@ class GeneratedEnvConfig(
                                 Modifier.STATIC,
                                 Modifier.FINAL
                             )
-                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs(release)})")
+                                .initializer("new EnvironmentImpl(${demo.getEnvironmentArgs(allVariables)})")
                                 .build()
                         )
                     }
@@ -294,7 +301,7 @@ class GeneratedEnvConfig(
     }
 
     private fun writeEnvironmentInterface(
-        env: EnvironmentExtension,
+        variables: Map<String, Variable>,
         packageName: String,
         filePath: String
     ): List<Pair<Type, String>> {

@@ -12,18 +12,17 @@ environment {
     online false
 
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
-    initEnvironment dev
+    initEnvironment demo
+
+    variable 'TEST_BASE_VARIABLE', "base"
 
     releaseConfig {
         appIcon "@mipmap/ic_android"
         appRoundIcon "@mipmap/ic_android"
         appName "EnvPlugin"
         versionName "1.0.0"
-        versionCode 100
         applicationId "${packageName}.test"
         variable 'APK_BUILD_TYPE', "release"
-
-        //resValue 'mipmap', 'APP_ICON', 'ic_android'
     }
 
     devConfig {
@@ -31,9 +30,9 @@ environment {
         appRoundIcon "@mipmap/ic_launcher"
         appName "@string/app_name"
         versionName "2.0.0"
-        versionCode 200
         applicationId packageName
         variable 'APK_BUILD_TYPE', "test"
+        variable 'TEST_BASE_VARIABLE', "base_devConfig"
     }
 
     releaseEnv {
@@ -49,24 +48,14 @@ environment {
         variable "WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06"
         variable "QQ_APP_ID", "1110499891", true
         variable "QQ_APP_KEY", "cmyrDyPBYXDudUtZ"
-        variable "HR_SDK_ENV", "4", "int"  //4表示华瑞银行sdk为生产环境
-    }
+        variable "HR_SDK_ENV", "4" ,"int"  //4表示华瑞银行sdk为生产环境
 
-    devEnv {
-        alias "bbb"
 
-        variable "API_BASE_URL", "http://devTest.com/"
-        variable "API_VERSION", "123456"
-        variable "BANK_SDK_APP_ID", "123123123123123"
-        variable "BANK_SDK_APP_SECRET", "xxxxxxxxxxxxx"
-        //定位API的路径
-        variable "LOCATE_URL", "http://asdfasdfasdfasdf"
-        variable "HR_SDK_ENV", "6"  //1表示华瑞银行sdk为SIT环境
-
+        variable 'TEST_BASE_VARIABLE', "base_R"
     }
 
     testEnv {
-        alias "ccc"
+        alias "测试"
 
         variable "API_BASE_URL", "http://sit.tms.api.yuchuanglian.com/"
         variable "API_VERSION", "180530"
@@ -75,6 +64,8 @@ environment {
         //定位API的路径
         variable "LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/"
         variable "HR_SDK_ENV", "1"  //1表示华瑞银行sdk为SIT环境
+
+        variable 'TEST_BASE_VARIABLE', "base_test"
     }
 
     demoEnv {
@@ -87,6 +78,8 @@ environment {
         //定位API的路径
         variable "LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/"
         variable "HR_SDK_ENV", "2"  //2表示华瑞银行sdk为UAT环境
+
+        variable 'TEST_BASE_VARIABLE', "base_demo"
     }
 }
 
@@ -97,16 +90,10 @@ android {
         versionCode environment.versionCode
         versionName environment.versionName
         applicationId environment.applicationId
-        versionCode 100
         minSdkVersion 14
         targetSdkVersion 31
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
-        manifestPlaceholders = [APP_ICON: environment.appIcon,
-                                APP_NAME:environment.appName,
-                                APP_ROUND_ICON:environment.appRoundIcon,
-        ]
 
         println("=========${environment.variables}")
         println("=========${environment.getVariable("API_BASE_URL")}")
@@ -123,7 +110,7 @@ android {
 
     buildTypes {
         release {
-            //signingConfig signingConfigs.release
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -144,7 +131,7 @@ android {
     productFlavors {
         for (channel in file('./channels')) {
             if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
-                "$channel" {
+                "$channel-$packageName" {
                     //JPush的固定字段
                     manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
                     buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
