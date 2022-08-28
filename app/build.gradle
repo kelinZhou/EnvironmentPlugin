@@ -131,7 +131,7 @@ android {
     productFlavors {
         for (channel in file('./channels')) {
             if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
-                "$channel-$packageName" {
+                "$channel" {
                     //JPush的固定字段
                     manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
                     buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
