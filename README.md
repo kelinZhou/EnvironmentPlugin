@@ -29,7 +29,7 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
-#### 1.5.5
+#### 1.5.6
 environment 增加manifestPlaceholders成员，由于插件有些时候生成manifestPlaceholders不起作用，该成员方便从gradle中配置。
 
 #### 1.5.1

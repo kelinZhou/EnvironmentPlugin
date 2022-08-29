@@ -7,7 +7,6 @@
             android:name=".App"
             android:icon="${APP_ICON}"
             android:label="${APP_NAME}"
-            android:roundIcon="${APP_ROUND_ICON}"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
