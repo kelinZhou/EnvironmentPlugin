@@ -17,7 +17,7 @@ plugins {
 }
 
 group = 'com.kelin.environment'
-version = '1.5.6'
+version = '1.5.7'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8

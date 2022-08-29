@@ -117,28 +117,23 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                 config.versionCode != -1 -> {
                     val codeStr = config.versionCode.toString()
                     if (codeStr.length > 3) {
-                        throw RuntimeException("versionCode:${config.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
+                        "1.0.0"
                     } else {
                         when (codeStr.length) {
                             1 -> "0.0.$codeStr"
                             2 -> "0.${codeStr.toCharArray().joinToString(".")}"
                             3 -> codeStr.toCharArray().joinToString(".")
-                            else -> throw RuntimeException("versionCode:${config.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
+                            else -> "1.0.0"
                         }
                     }
                 }
-                else -> throw RuntimeException("You need set the versionName's value for ${if (online) "releaseConfig" else "devConfig"}.")
+                else -> "1.0.0"
             }
         }
 
     @get:Input
     val applicationId: String
-        get() {
-            return when {
-                config.applicationId.isNotEmpty() -> config.applicationId
-                else -> throw RuntimeException("You need set the applicationId's value for ${if (online) "releaseConfig" else "devConfig"}.")
-            }
-        }
+        get() = config.applicationId
 
     private val allVariables: Map<String, EnvValue>
         get() {
