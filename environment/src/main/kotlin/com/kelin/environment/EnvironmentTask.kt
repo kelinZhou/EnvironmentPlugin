@@ -4,6 +4,7 @@ import com.android.build.gradle.AppExtension
 import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.lang.RuntimeException
 import java.text.SimpleDateFormat
@@ -26,18 +27,49 @@ import kotlin.collections.LinkedHashMap
  */
 open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtension {
 
+    @get:Input
     val release = EnvType.RELEASE
+    @get:Input
     val dev = EnvType.DEV
+    @get:Input
     val test = EnvType.TEST
+    @get:Input
     val demo = EnvType.DEMO
 
+    @get:Input
+    var online = false
+
+    @get:Input
+    var initEnvironment = release
+
+    @get:Input
+    val manifestPlaceholders: MutableMap<String, Any>
+        get() = LinkedHashMap<String, Any>().apply {
+            if (config.appIcon.isNotEmpty()) {
+                this["APP_ICON"] = config.appIcon
+            }
+            if (config.appRoundIcon.isNotEmpty()) {
+                this["APP_ROUND_ICON"] =
+                    config.appRoundIcon
+            }
+            if (config.appName.isNotEmpty()) {
+                this["APP_NAME"] = config.appName
+            }
+            innerConstants.forEach {
+                if (it.value.placeholder) {
+                    this[it.key.toUpperCase(Locale.US)] = it.value.value
+                }
+            }
+            when (initEnvironment) {
+                EnvType.RELEASE -> releaseExt
+                EnvType.DEV -> devExt
+                EnvType.TEST -> testExt
+                EnvType.DEMO -> demoExt
+            }.createManifestPlaceholders(this, allVariables)
+        }
 
     private val innerVariables = HashMap<String, EnvValue>()
     private val innerConstants = HashMap<String, EnvValue>()
-
-
-    var online = false
-    var initEnvironment = release
 
     private val envGenerators = ArrayList<GeneratedEnvConfig>()
     private val releaseExt by lazy { project.extensions.findByName("releaseEnv") as EnvironmentExtension }
@@ -53,6 +85,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
         }
     }
 
+    @get:Input
     val appName: String
         get() {
             return when {
@@ -61,6 +94,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
             }
         }
 
+    @get:Input
     val appIcon: String
         get() {
             return when {
@@ -69,6 +103,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
             }
         }
 
+    @get:Input
     val appRoundIcon: String
         get() {
             return when {
@@ -77,6 +112,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
             }
         }
 
+    @get:Input
     val versionCode: Int
         get() {
             return when {
@@ -85,6 +121,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
             }
         }
 
+    @get:Input
     val versionName: String
         get() {
             return when {
@@ -106,6 +143,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
             }
         }
 
+    @get:Input
     val applicationId: String
         get() {
             return when {
@@ -237,33 +275,13 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
         val info = getCurrentVariant()
         val channel = info.first
         val type = info.second
-        println("Channel: ${if (channel.isEmpty()) "unknown" else channel}")
+        println("Channel: ${channel.ifEmpty { "unknown" }}")
         println("BuildType: $type")
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
                 println("\n------Generate placeholder for ${variant.name} Beginning------\n")
                 variant.mergedFlavor.manifestPlaceholders.also { manifestPlaceholders ->
-                    if (config.appIcon.isNotEmpty()) {
-                        manifestPlaceholders["APP_ICON"] = config.appIcon
-                    }
-                    if (config.appRoundIcon.isNotEmpty()) {
-                        manifestPlaceholders["APP_ROUND_ICON"] =
-                            config.appRoundIcon
-                    }
-                    if (config.appName.isNotEmpty()) {
-                        manifestPlaceholders["APP_NAME"] = config.appName
-                    }
-                    innerConstants.forEach {
-                        if (it.value.placeholder) {
-                            manifestPlaceholders[it.key.toUpperCase(Locale.US)] = it.value.value
-                        }
-                    }
-                    when (initEnvironment) {
-                        EnvType.RELEASE -> releaseExt
-                        EnvType.DEV -> devExt
-                        EnvType.TEST -> testExt
-                        EnvType.DEMO -> demoExt
-                    }.createManifestPlaceholders(manifestPlaceholders, allVariables)
+                    manifestPlaceholders.putAll(this.manifestPlaceholders)
                     manifestPlaceholders.forEach {
                         println("${it.key} : ${it.value}")
                     }
