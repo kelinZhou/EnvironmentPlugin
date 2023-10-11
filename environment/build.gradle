@@ -17,12 +17,13 @@ plugins {
 }
 
 group = 'com.kelin.environment'
-version = '1.5.5'
+version = '1.5.7'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
     //gradle sdk
     implementation gradleApi()
     //groovy sdk
@@ -73,3 +74,13 @@ uploadArchives {
         }
     }
 }
+
+//用来打包到本地仓库
+//afterEvaluate {
+//    repositories {
+//        maven {
+//            //本地的Maven地址设置为D:/repos
+//            url = uri('/Users/kelin/mavenRepo')
+//        }
+//    }
+//}

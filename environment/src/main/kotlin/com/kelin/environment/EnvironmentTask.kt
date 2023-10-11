@@ -1,8 +1,11 @@
 package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
+import com.android.builder.model.BaseConfig
 import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
+import com.kelin.environment.model.Version
+import com.kelin.environment.model.lessThan
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
@@ -29,10 +32,13 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
 
     @get:Input
     val release = EnvType.RELEASE
+
     @get:Input
     val dev = EnvType.DEV
+
     @get:Input
     val test = EnvType.TEST
+
     @get:Input
     val demo = EnvType.DEMO
 
@@ -139,6 +145,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                         }
                     }
                 }
+
                 else -> throw RuntimeException("You need set the versionName's value for ${if (online) "releaseConfig" else "devConfig"}.")
             }
         }
@@ -199,7 +206,8 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
     }
 
     fun getVariable(key: String): String {
-        return innerVariables[key]?.value ?: config.getVariable(key) ?: currentEnvVariables[key]?.value
+        return innerVariables[key]?.value ?: config.getVariable(key)
+        ?: currentEnvVariables[key]?.value
         ?: ""
     }
 
@@ -289,9 +297,16 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                 println("\n------Generate placeholder for ${variant.name} End------\n")
 
                 variant.generateBuildConfigProvider.get().run {
+                    println("GradleVersion:${project.gradle.gradleVersion}")
+                    val srcOutputDir = if (Version(project.gradle.gradleVersion).lessThan(Version("6.7.1"))) {
+                        sourceOutputDir.absolutePath
+                    } else {
+                        "${project.buildDir.absolutePath}/generated/source/buildConfig/${variant.dirName}"
+                    }
+                    println("SrcOutputDir:${srcOutputDir}")
                     envGenerators.add(
                         GeneratedEnvConfig(
-                            sourceOutputDir.absolutePath,
+                            srcOutputDir,
                             buildConfigPackageName.get(),
                             initEnvironment,
                             online,
