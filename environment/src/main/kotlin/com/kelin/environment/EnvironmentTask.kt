@@ -279,23 +279,25 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
         fixPlaceholder()
         val appExt = project.extensions.findByType(AppExtension::class.java)
         val app = appExt?.applicationVariants
-
+        val defaultConfig = appExt?.defaultConfig
         val info = getCurrentVariant()
         val channel = info.first
         val type = info.second
         println("Channel: ${channel.ifEmpty { "unknown" }}")
         println("BuildType: $type")
+        if (defaultConfig != null || !app.isNullOrEmpty()) {
+            println("\n------Generate placeholder Beginning------\n")
+            manifestPlaceholders.forEach {
+                println("${it.key} : ${it.value}")
+            }
+            println("\n------Generate placeholder End------\n")
+        }
+        defaultConfig?.manifestPlaceholders?.putAll(this.manifestPlaceholders)
         app?.all { variant ->
             if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
-                println("\n------Generate placeholder for ${variant.name} Beginning------\n")
                 variant.mergedFlavor.manifestPlaceholders.also { manifestPlaceholders ->
                     manifestPlaceholders.putAll(this.manifestPlaceholders)
-                    manifestPlaceholders.forEach {
-                        println("${it.key} : ${it.value}")
-                    }
                 }
-                println("\n------Generate placeholder for ${variant.name} End------\n")
-
                 variant.generateBuildConfigProvider.get().run {
                     println("GradleVersion:${project.gradle.gradleVersion}")
                     val srcOutputDir = if (Version(project.gradle.gradleVersion).lessThan(Version("6.7.1"))) {

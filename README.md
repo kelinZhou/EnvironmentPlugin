@@ -29,8 +29,43 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+#### 1.5.9 
+修复在Gradle6.7.1已以后的版本中使用时会报错：sourceOutputDir方法丢失的问题。
+
 #### 1.5.5
-environment 增加manifestPlaceholders成员，由于插件有些时候生成manifestPlaceholders不起作用，该成员方便从gradle中配置。
+environment 增加manifestPlaceholders成员，由于插件有些时候生成manifestPlaceholders不起作用，该成员方便从gradle中配置，以下方式只有在manifestPlaceholders失效时才使用，默认不需要使用。
+**方式一：**可以在App的build.gradle中的android中增加如下代码。
+```groovy
+android{
+    //...省略部分代码
+    
+    applicationVariants.configureEach { variants ->
+        variants.mergedFlavor.manifestPlaceholders = environment.manifestPlaceholders
+    }
+}
+```
+**方式二：**可以在App的build.gradle中的android中增加如下代码。
+```groovy
+android{
+    //...省略部分代码
+    
+    productFlavors.configureEach { flavor ->
+        flavor.manifestPlaceholders = environment.manifestPlaceholders
+    }
+}
+```
+**方式三：**可以在App的build.gradle中的android中的defaultConfig中增加如下代码。
+```groovy
+android{
+    //...省略部分代码
+    
+    defaultConfig{
+        //...省略部分代码
+        
+        manifestPlaceholders.putAll(environment.manifestPlaceholders)
+    }
+}
+```
 
 #### 1.5.1
 environment 增加constants()方法用于声明常量,声明的常量可以直接通过EnvConfig.XXX的方式调用，constants()的用法与variables()的用法一致。
