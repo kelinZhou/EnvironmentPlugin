@@ -93,30 +93,15 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
 
     @get:Input
     val appName: String
-        get() {
-            return when {
-                config.appName.isNotEmpty() -> config.appName
-                else -> throw RuntimeException("You need set the appName's value for ${if (online) "releaseConfig" else "devConfig"}.")
-            }
-        }
+        get() = config.appName
 
     @get:Input
     val appIcon: String
-        get() {
-            return when {
-                config.appIcon.isNotEmpty() -> config.appIcon
-                else -> throw RuntimeException("You need set the appIcon's value for ${if (online) "releaseConfig" else "devConfig"}.")
-            }
-        }
+        get() = config.appIcon
 
     @get:Input
     val appRoundIcon: String
-        get() {
-            return when {
-                config.appRoundIcon.isNotEmpty() -> config.appRoundIcon
-                else -> throw RuntimeException("You need set the appRoundIcon's value for ${if (online) "releaseConfig" else "devConfig"}.")
-            }
-        }
+        get() = config.appRoundIcon
 
     @get:Input
     val versionCode: Int
@@ -152,12 +137,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
 
     @get:Input
     val applicationId: String
-        get() {
-            return when {
-                config.applicationId.isNotEmpty() -> config.applicationId
-                else -> throw RuntimeException("You need set the applicationId's value for ${if (online) "releaseConfig" else "devConfig"}.")
-            }
-        }
+        get() = config.applicationId
 
     private val allVariables: Map<String, EnvValue>
         get() {

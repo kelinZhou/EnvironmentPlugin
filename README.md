@@ -29,6 +29,10 @@ apply plugin: "com.kelin.environment"
 ```
 
 ## 更新记录
+
+#### 1.6.0
+将applicationId、appIcon、appRoundIcon、appName这些字段改为非必要。
+
 #### 1.5.9 
 修复在Gradle6.7.1已以后的版本中使用时会报错：sourceOutputDir方法丢失的问题。
 
