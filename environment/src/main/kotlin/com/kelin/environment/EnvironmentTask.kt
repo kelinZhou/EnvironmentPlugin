@@ -1,7 +1,6 @@
 package com.kelin.environment
 
 import com.android.build.gradle.AppExtension
-import com.android.builder.model.BaseConfig
 import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import com.kelin.environment.model.Version
@@ -279,8 +278,9 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                     manifestPlaceholders.putAll(this.manifestPlaceholders)
                 }
                 variant.generateBuildConfigProvider.get().run {
-                    println("GradleVersion:${project.gradle.gradleVersion}")
-                    val srcOutputDir = if (Version(project.gradle.gradleVersion).lessThan(Version("6.7.1"))) {
+                    val support = Version(project.gradle.gradleVersion).lessThan(Version("6.7.1"))
+                    println("GradleVersion:${project.gradle.gradleVersion}|support:${support}")
+                    val srcOutputDir = if (support) {
                         sourceOutputDir.absolutePath
                     } else {
                         "${project.buildDir.absolutePath}/generated/source/buildConfig/${variant.dirName}"
