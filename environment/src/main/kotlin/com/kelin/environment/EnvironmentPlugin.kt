@@ -1,7 +1,6 @@
 package com.kelin.environment
 
 import com.kelin.environment.extension.EnvironmentExtension
-import com.kelin.environment.extension.PackageConfigExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -29,9 +28,6 @@ class EnvironmentPlugin : Plugin<Project> {
 //            return@find false
 //        }
         project.tasks.findByName("preBuild")?.dependsOn(envTask)//每当cleanTask执行之后就执行环境配置的Task
-
-        project.extensions.create("devConfig", PackageConfigExtension::class.java)
-        project.extensions.create("releaseConfig", PackageConfigExtension::class.java)
 
         project.extensions.create("releaseEnv", EnvironmentExtension::class.java)
         project.extensions.create("devEnv", EnvironmentExtension::class.java)

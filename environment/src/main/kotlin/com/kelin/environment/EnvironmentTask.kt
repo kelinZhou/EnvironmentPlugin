@@ -5,7 +5,9 @@ import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.PackageConfigExtension
 import com.kelin.environment.model.Version
 import com.kelin.environment.model.lessThan
+import org.gradle.api.Action
 import org.gradle.api.DefaultTask
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.lang.RuntimeException
@@ -29,6 +31,12 @@ import kotlin.collections.LinkedHashMap
  */
 open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtension {
 
+    /**
+     * 配置EnvConfig文件的包名，适配多包名场景，在多包名项目中指定该参数可避免不同包名时使用EnvConfig需要导不同包的尴尬问题。
+     */
+    @get:Input
+    var envPackage: String = ""
+
     @get:Input
     val release = EnvType.RELEASE
 
@@ -50,19 +58,19 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
     @get:Input
     val manifestPlaceholders: MutableMap<String, Any>
         get() = LinkedHashMap<String, Any>().apply {
-            if (config.appIcon.isNotEmpty()) {
-                this["APP_ICON"] = config.appIcon
+            if (curConfig.appIcon.isNotEmpty()) {
+                this["APP_ICON"] = curConfig.appIcon
             }
-            if (config.appRoundIcon.isNotEmpty()) {
+            if (curConfig.appRoundIcon.isNotEmpty()) {
                 this["APP_ROUND_ICON"] =
-                    config.appRoundIcon
+                    curConfig.appRoundIcon
             }
-            if (config.appName.isNotEmpty()) {
-                this["APP_NAME"] = config.appName
+            if (curConfig.appName.isNotEmpty()) {
+                this["APP_NAME"] = curConfig.appName
             }
             innerConstants.forEach {
                 if (it.value.placeholder) {
-                    this[it.key.toUpperCase(Locale.US)] = it.value.value
+                    this[it.key.uppercase(Locale.US)] = it.value.value
                 }
             }
             when (initEnvironment) {
@@ -82,31 +90,49 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
     private val testExt by lazy { project.extensions.findByName("testEnv") as EnvironmentExtension }
     private val demoExt by lazy { project.extensions.findByName("demoEnv") as EnvironmentExtension }
 
-    private val config by lazy {
-        if (online) {
-            project.extensions.findByName("releaseConfig") as PackageConfigExtension
-        } else {
-            project.extensions.findByName("devConfig") as PackageConfigExtension
-        }
+    private val configs: NamedDomainObjectContainer<PackageConfigExtension> = project.container(PackageConfigExtension::class.java)
+
+    @get:Input
+    var enabledConfig: String = ""
+
+    private val curConfig: PackageConfigExtension by lazy {
+        configs.find {
+            if (enabledConfig.isBlank()) {
+                if (online) {
+                    it.name.endsWith("Release", true)
+                } else {
+                    it.name.endsWith("Dev", true)
+                }
+            } else {
+                it.name.equals("${enabledConfig}${if (online) "Release" else "Dev"}", true)
+            }
+        } ?: throw NullPointerException("The config of ${if (online) "Release" else "Dev"} must not be null! Please use 'dev' or 'release' with 'configs'.")
+    }
+
+    /**
+     * 声明环境配置的方法。
+     */
+    fun configs(action: Action<NamedDomainObjectContainer<PackageConfigExtension>>) {
+        action.execute(configs)
     }
 
     @get:Input
     val appName: String
-        get() = config.appName
+        get() = curConfig.appName
 
     @get:Input
     val appIcon: String
-        get() = config.appIcon
+        get() = curConfig.appIcon
 
     @get:Input
     val appRoundIcon: String
-        get() = config.appRoundIcon
+        get() = curConfig.appRoundIcon
 
     @get:Input
     val versionCode: Int
         get() {
             return when {
-                config.versionCode != -1 -> return config.versionCode
+                curConfig.versionCode != -1 -> return curConfig.versionCode
                 else -> Date().let { SimpleDateFormat("yyMMddHH", Locale.CHINA).format(it).toInt() }
             }
         }
@@ -115,17 +141,17 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
     val versionName: String
         get() {
             return when {
-                config.versionName.isNotEmpty() -> config.versionName
-                config.versionCode != -1 -> {
-                    val codeStr = config.versionCode.toString()
+                curConfig.versionName.isNotEmpty() -> curConfig.versionName
+                curConfig.versionCode != -1 -> {
+                    val codeStr = curConfig.versionCode.toString()
                     if (codeStr.length > 3) {
-                        throw RuntimeException("versionCode:${config.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
+                        throw RuntimeException("versionCode:${curConfig.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
                     } else {
                         when (codeStr.length) {
                             1 -> "0.0.$codeStr"
                             2 -> "0.${codeStr.toCharArray().joinToString(".")}"
                             3 -> codeStr.toCharArray().joinToString(".")
-                            else -> throw RuntimeException("versionCode:${config.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
+                            else -> throw RuntimeException("versionCode:${curConfig.versionCode} does not support.Your versionCode’s length must be <= 3, such as 100.")
                         }
                     }
                 }
@@ -136,20 +162,20 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
 
     @get:Input
     val applicationId: String
-        get() = config.applicationId
+        get() = curConfig.applicationId
 
     private val allVariables: Map<String, EnvValue>
         get() {
             return LinkedHashMap<String, EnvValue>().apply {
                 putAll(innerVariables)
-                putAll(config.variables)
+                putAll(curConfig.variables)
                 putAll(currentEnvVariables)
             }
         }
 
     private fun fixPlaceholder() {
         ArrayList(innerVariables.entries).apply {
-            addAll(config.variables.entries)
+            addAll(curConfig.variables.entries)
             addAll(currentEnvVariables.entries)
         }.groupBy { it.key }.forEach { group ->
             if (group.value.size > 1) {
@@ -185,13 +211,21 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
     }
 
     fun getVariable(key: String): String {
-        return innerVariables[key]?.value ?: config.getVariable(key)
+        return innerVariables[key]?.value ?: curConfig.getVariable(key)
         ?: currentEnvVariables[key]?.value
         ?: ""
     }
 
+    fun isVariable(key: String, value: String): Boolean {
+        return getVariable(key) == value
+    }
+
     fun getConstant(key: String): String {
         return innerConstants[key]?.value ?: ""
+    }
+
+    fun isConstant(key: String, value: String): Boolean {
+        return getConstant(key) == value
     }
 
     private fun getCurrentVariant(): Pair<String, String> {
@@ -203,7 +237,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
             var end = tskReqStr.indexOf("ReleaseSources", start)
             end = if (end > 0) end else tskReqStr.indexOf("DebugSources", start)
             if (end > 0) {
-                tskReqStr.substring(start + 12, end).toLowerCase(Locale.getDefault())
+                tskReqStr.substring(start + 12, end).lowercase(Locale.getDefault())
             } else {
                 ""
             }
@@ -213,7 +247,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                 var end = tskReqStr.indexOf("Release", start)
                 end = if (end > 0) end else tskReqStr.indexOf("Debug", start)
                 if (end > 0) {
-                    tskReqStr.substring(start + 12, end).toLowerCase(Locale.getDefault())
+                    tskReqStr.substring(start + 12, end).lowercase(Locale.getDefault())
                 } else {
                     ""
                 }
@@ -223,7 +257,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
         }
         return Pair(
             channel,
-            if (tskReqStr.toLowerCase(Locale.getDefault())
+            if (tskReqStr.lowercase(Locale.getDefault())
                     .contains("release") || tskReqStr.contains(
                     "aR"
                 )
@@ -273,7 +307,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
         }
         defaultConfig?.manifestPlaceholders?.putAll(this.manifestPlaceholders)
         app?.all { variant ->
-            if (variant.name.toLowerCase(Locale.getDefault()).contains("$channel$type")) {
+            if (variant.name.lowercase(Locale.getDefault()).contains("$channel$type")) {
                 variant.mergedFlavor.manifestPlaceholders.also { manifestPlaceholders ->
                     manifestPlaceholders.putAll(this.manifestPlaceholders)
                 }
@@ -286,13 +320,16 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                         "${project.buildDir.absolutePath}/generated/source/buildConfig/${variant.dirName}"
                     }
                     println("SrcOutputDir:${srcOutputDir}")
+                    val packageName = envPackage.ifBlank { applicationId.ifBlank { variant.applicationId } }
+                    println("BuildConfigPackageName:${packageName}")
                     envGenerators.add(
                         GeneratedEnvConfig(
                             srcOutputDir,
-                            buildConfigPackageName.get(),
+                            packageName,
                             initEnvironment,
                             online,
                             variant.versionName ?: "",
+                            enabledConfig,
                             innerConstants,
                             allVariables,
                             releaseExt,
@@ -314,7 +351,7 @@ open class EnvironmentTask : DefaultTask(), VariableExtension, ImmutableExtensio
                             println("${it.key} : ${it.value}")
                         }
                         println("\nPackageVariables:")
-                        config.variables.forEach {
+                        curConfig.variables.forEach {
                             println("${it.key} : ${it.value}")
                         }
                         println("\nVersionInfo:")

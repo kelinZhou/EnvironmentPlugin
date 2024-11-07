@@ -1,10 +1,13 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.gradle.publish:plugin-publish-plugin:0.11.0"
+        classpath "com.gradle.publish:plugin-publish-plugin:1.2.1"
     }
 }
 
@@ -12,15 +15,15 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'kotlin'
     id 'java-gradle-plugin'
-    id 'maven'
-    id "com.gradle.plugin-publish" version "0.11.0"
+//    id 'maven'
+    id "com.gradle.plugin-publish" version "1.2.1"
 }
 
-group = 'com.kelin.environment'
-version = '1.6.1.1'
+def pluginGroup = 'com.kelin.environment'
+def pluginVersion = '1.6.2'
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+group = pluginGroup
+version = pluginVersion
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
@@ -33,54 +36,51 @@ dependencies {
     implementation 'com.squareup:javapoet:1.13.0'//用来生成java文件的，避免字符串拼接的尴尬
 }
 
-repositories {
-    mavenCentral()
-}
-
-pluginBundle {
+gradlePlugin {
     website = 'https://github.com/kelinZhou/EnvironmentPlugin'
     vcsUrl = 'https://github.com/kelinZhou/EnvironmentPlugin'
-    tags = ['Android', 'Environment configuration']
-}
-
-gradlePlugin {
     plugins {
-        environmentPlugin {
+        create("environmentPlugin"){
             id = 'com.kelin.environment'
             displayName = 'Environment build Plugin'
             description = 'use this to configuration your api environment.'
             implementationClass = 'com.kelin.environment.EnvironmentPlugin'
+            tags.set(['Android', 'Environment configuration'])
         }
     }
 }
 
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = '1.8'
     }
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = '1.8'
     }
 }
 
-//用来打包到本地仓库
-uploadArchives {
+publishing {
+
+    publications {
+        maven(MavenPublication) {
+            groupId = pluginGroup
+            artifactId = 'environment'
+            version = pluginVersion
+
+            from components.java
+        }
+    }
+
     repositories {
-        mavenDeployer {
-            //本地的Maven地址设置为D:/repos
-            repository(url: uri('/Users/kelin/mavenRepo'))
+        maven {
+            url = '/Users/kelin/mavenRepo'
         }
     }
 }
 
-//用来打包到本地仓库
-//afterEvaluate {
-//    repositories {
-//        maven {
-//            //本地的Maven地址设置为D:/repos
-//            url = uri('/Users/kelin/mavenRepo')
-//        }
-//    }
-//}
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}

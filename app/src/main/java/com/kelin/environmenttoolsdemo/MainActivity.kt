@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,8 +19,8 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun updateEnvValue() {
         val env = EnvConfig.getEnv()
-        tvVariable.text =
-            env.javaClass.fields.joinToString("\n") { "${it.name}:${it.get(env)}" } + "\nApplicationId:${BuildConfig.APPLICATION_ID}"
+        findViewById<TextView>(R.id.tvVariable).text =
+            env.javaClass.fields.joinToString("\n") { "${it.name}:${it.get(env)}" } + "\nApplicationId:${BuildConfig.APPLICATION_ID}" + "\nVersionName:${BuildConfig.VERSION_NAME}"
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

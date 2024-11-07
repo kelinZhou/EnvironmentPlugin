@@ -1,15 +1,14 @@
-apply plugin: 'com.android.application'
-
-apply plugin: 'kotlin-android'
-
-//apply plugin: 'kotlin-android-extensions'
-
-apply plugin: "com.kelin.environment"
-
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "com.kelin.environment"
+}
 
 environment {
     //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
     online false
+
+    envPackage packageName
 
     //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
     initEnvironment demo
@@ -19,23 +18,29 @@ environment {
     constant 'IS_CONSTANT', 'true', 'Boolean', true
     constant 'IS_CONSTANT_VALUE', 'false', 'Boolean'
 
-    releaseConfig {
-        appIcon "@mipmap/ic_android"
-//        appRoundIcon "@mipmap/ic_android"
-        appName "EnvPlugin"
-        versionName "1.0.0"
-        applicationId "${packageName}.test"
-        variable 'APK_BUILD_TYPE', "release"
-    }
+    //本次编译启用Flavor为CN的配置，Flavor的名字不区分大小写。
+    enabledConfig "CN"
 
-    devConfig {
-        appIcon "@mipmap/ic_launcher"
-//        appRoundIcon "@mipmap/ic_launcher"
-        appName "@string/app_name"
-        versionName "2.0.0"
-        applicationId packageName
-        variable 'APK_BUILD_TYPE', "test"
-        variable 'TEST_BASE_VARIABLE', "base_devConfig"
+    configs{
+        //配置项的命名的规则为Flavor+Type,Flavor遵循Java命名规范即可，Type只可以是Release(发布)和Dev(开发)。
+        //以下面的cnRelease为例，其中cn就是Flavor而Release这表示这里一个发布环境下的配置，也就是`online`为`true`时的配置。
+        //一个Flavor有且必须有两个配置：Release和Dev。
+        cnRelease { //声明一个Flavor为CN的发布环境配置，这里的配置内容与原来的releaseConfig一致。
+            appIcon "@mipmap/ic_android"
+            appName "EnvPlugin"
+            versionName "1.0.0"
+            applicationId packageName
+            variable 'APK_BUILD_TYPE', "release"
+        }
+
+        cnDev { //声明一个Flavor为CN的开发环境配置，这里的配置内容与原来的devConfig一致。
+            appIcon "@mipmap/ic_launcher"
+            appName "@string/app_name_test"
+            versionName "1.0.0.alpha1"
+            applicationId "${packageName}.test"
+            variable 'APK_BUILD_TYPE', "test"
+            variable 'TEST_BASE_VARIABLE', "base_devConfig"
+        }
     }
 
     releaseEnv {
@@ -88,13 +93,13 @@ environment {
 
 android {
 
-    compileSdkVersion 31
+    compileSdk 34
     defaultConfig {
         versionCode environment.versionCode
         versionName environment.versionName
         applicationId environment.applicationId
         minSdkVersion 14
-        targetSdkVersion 31
+        targetSdkVersion 34
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -120,6 +125,7 @@ android {
         }
     }
 
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -129,29 +135,32 @@ android {
         jvmTarget = '1.8'
     }
 
+
     //支持多渠道配置。
-    flavorDimensions "default"
-    productFlavors {
-        for (channel in file('./channels')) {
-            if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
-                "$channel-$packageName" {
-                    //JPush的固定字段
-                    manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
-                    buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
-                    dimension "default"
-                }
-                if (!environment.release) {
-                    break
-                }
-            }
-        }
-    }
+//    flavorDimensions "default"
+//    productFlavors {
+//        for (channel in file('./channels')) {
+//            if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
+//                "$channel-$packageName" {
+//                    //JPush的固定字段
+//                    manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
+//                    buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
+//                    dimension "default"
+//                }
+//                if (!environment.release) {
+//                    break
+//                }
+//            }
+//        }
+//    }
+
+    namespace 'com.kelin.environmenttoolsdemo'
 }
 
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

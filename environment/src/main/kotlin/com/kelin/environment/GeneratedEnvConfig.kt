@@ -25,6 +25,7 @@ class GeneratedEnvConfig(
     private val environment: EnvType,
     private val isRelease: Boolean,
     private val version: String,
+    private val flavor:String,
     private val constants: Map<String, EnvValue>,
     private val allVariables: Map<String, EnvValue>,
     private val release: EnvironmentExtension,
@@ -80,6 +81,17 @@ class GeneratedEnvConfig(
             .addJavadoc("**Description:** configure the environment.(Automatically generated file. DO NOT MODIFY)。\n<p>\n**Version:** v $version\n")
             .addField(
                 FieldSpec.builder(
+                    String::class.java,
+                    "FLAVOR",
+                    Modifier.PUBLIC,
+                    Modifier.STATIC,
+                    Modifier.FINAL
+                )
+                    .initializer("\"$flavor\"")
+                    .build()
+            )
+            .addField(
+                FieldSpec.builder(
                     Boolean::class.java,
                     "IS_RELEASE",
                     Modifier.PUBLIC,
@@ -104,7 +116,7 @@ class GeneratedEnvConfig(
                     addField(
                         FieldSpec.builder(
                             it.value.type,
-                            it.key.toUpperCase(Locale.US),
+                            it.key.uppercase(Locale.US),
                             Modifier.PUBLIC,
                             Modifier.STATIC,
                             Modifier.FINAL

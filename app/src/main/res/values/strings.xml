@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">环境插件</string>
+    <string name="app_name">插件发布</string>
+    <string name="app_name_test">插件测试</string>
     <string name="release">生产</string>
     <string name="dev">开发</string>
     <string name="test">测试</string>

@@ -14,7 +14,7 @@ import java.util.HashMap
  *
  * **版本:** v 1.0.0
  */
-open class PackageConfigExtension : VariableExtension {
+open class PackageConfigExtension(val name: String) : VariableExtension {
     @get:Input
     internal var appIcon = ""
 
