@@ -16,49 +16,26 @@ import java.util.HashMap
  */
 open class PackageConfigExtension(val name: String) : VariableExtension {
     @get:Input
-    internal var appIcon = ""
+    var appIcon = ""
 
     @get:Input
-    internal var appRoundIcon = ""
+    var appRoundIcon = ""
 
     @get:Input
-    internal var appName = ""
+    var appName = ""
 
     @get:Input
-    internal var versionCode = -1
+    var versionCode = -1
 
     @get:Input
-    internal var versionName = ""
+    var versionName = ""
 
     @get:Input
-    internal var applicationId = ""
+    var applicationId = ""
 
     @get:Input
     internal val variables = HashMap<String, EnvValue>()
 
-    fun appIcon(appIcon: String) {
-        this.appIcon = appIcon
-    }
-
-    fun appRoundIcon(appRoundIcon: String) {
-        this.appRoundIcon = appRoundIcon
-    }
-
-    fun appName(appName: String) {
-        this.appName = appName
-    }
-
-    fun versionCode(versionCode: Int) {
-        this.versionCode = versionCode
-    }
-
-    fun versionName(versionName: String) {
-        this.versionName = versionName
-    }
-
-    fun applicationId(applicationId: String) {
-        this.applicationId = applicationId
-    }
 
     override fun variable(name: String, value: EnvValue) {
         variables[name] = value

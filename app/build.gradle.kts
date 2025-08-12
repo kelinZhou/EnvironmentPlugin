@@ -1,0 +1,174 @@
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+    id("com.kelin.environment")
+}
+
+val packageName : String = rootProject.extra["packageName"].toString()
+
+environment {
+    //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
+    online = false
+
+    envPackage = packageName
+
+    //配置初始化环境(应用首次安装到设备上的默认环境)，改参数也是用来配置manifestPlaceholders的环境的。
+    initEnvironment = demo
+
+    variable("TEST_BASE_VARIABLE", "base")
+
+    constant("IS_CONSTANT", "true", "Boolean", true)
+    constant("IS_CONSTANT_VALUE", "false", "Boolean")
+
+    //本次编译启用Flavor为CN的配置，Flavor的名字不区分大小写。
+    enabledConfig = "CN"
+
+    configs {
+        //配置项的命名的规则为Flavor+Type,Flavor遵循Java命名规范即可，Type只可以是Release(发布)和Dev(开发)。
+        //以下面的cnRelease为例，其中cn就是Flavor而Release这表示这里一个发布环境下的配置，也就是`online`为`true`时的配置。
+        //一个Flavor有且必须有两个配置：Release和Dev。
+        create("cnRelease") {
+            appIcon = "@mipmap/ic_android"
+            appName = "EnvPlugin"
+            versionName = "1.0.0"
+            applicationId = packageName
+            variable("APK_BUILD_TYPE", "release")
+        }
+
+        create("cnDev") { //声明一个Flavor为CN的开发环境配置，这里的配置内容与原来的devConfig一致。
+            appIcon = "@mipmap/ic_launcher"
+            appName = "@string/app_name_test"
+            versionName = "1.0.0.alpha1"
+            applicationId = "${packageName}.test"
+            variable("APK_BUILD_TYPE", "test")
+            variable("TEST_BASE_VARIABLE", "base_devConfig")
+        }
+    }
+
+    releaseEnv {
+        alias = "生产"
+
+        variable("API_BASE_URL", "https://iyx.smart.api.intelliyx.com/")
+        variable("API_VERSION", "")
+        variable("BANK_SDK_APP_ID", "3031266f-54a8-46dd-ba47-2a0d516df29b")
+        variable("BANK_SDK_APP_SECRET", "f4db09cf-80b2-4d3f-bda1-997ab41a3754")
+        //定位API的路径
+        variable("LOCATE_URL", "https://iyx.smart.api.intelliyx.com/api/v1/")
+        variable("WE_CHAT_APP_ID", "wxf21bd8885522192d")
+        variable("WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06")
+        variable("QQ_APP_ID", "1110499891", true)
+        variable("QQ_APP_KEY", "cmyrDyPBYXDudUtZ")
+        variable("HR_SDK_ENV", "4", "int")
+
+
+        variable("TEST_BASE_VARIABLE", "base_R")
+    }
+
+    testEnv {
+        alias = "测试"
+
+        variable("API_BASE_URL", "http://sit.tms.api.yuchuanglian.com/")
+        variable("API_VERSION", "180530")
+        variable("BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10")
+        variable("BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809")
+        //定位API的路径
+        variable("LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/")
+        variable("HR_SDK_ENV", "1")
+
+        variable("TEST_BASE_VARIABLE", "base_test")
+    }
+
+    demoEnv {
+        alias = "预发"
+
+        variable("API_BASE_URL", "http://uat.tms.api.yuchuanglian.com/")
+        variable("API_VERSION", "180530")
+        variable("BANK_SDK_APP_ID", "6cf89834-322d-466f-a5ba-df175f8f1a10")
+        variable("BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809")
+        //定位API的路径
+        variable("LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/")
+        variable("HR_SDK_ENV", "2")
+
+        variable("TEST_BASE_VARIABLE", "base_demo")
+    }
+}
+
+android {
+
+    compileSdk = 34
+    defaultConfig {
+        versionCode = environment.versionCode
+        versionName = environment.versionName
+        applicationId = environment.applicationId
+        minSdk = 14
+        targetSdk = 34
+
+        testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
+
+        println("=========${environment.getVariable("API_BASE_URL")}")
+
+        manifestPlaceholders.putAll(environment.manifestPlaceholders)
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = "stephen"
+            keyPassword = "881219"
+            storeFile = file("/Users/kelin/KeyStores/Android/StephenZhou.jks")
+            storePassword = "881219"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs["release"]
+//            minifyEnabled ( false)
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+        debug {
+            signingConfig = signingConfigs["release"]
+//            minifyEnabled (false)
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    //支持多渠道配置。
+//    flavorDimensions "default"
+//    productFlavors {
+//        for (channel in file('./channels')) {
+//            if (channel != null && channel.length() > 0 && !channel.startsWith("//")) {
+//                "$channel-$packageName" {
+//                    //JPush的固定字段
+//                    manifestPlaceholders = ["JPUSH_PKGNAME": packageName, "JPUSH_CHANNEL": channel]
+//                    buildConfigField 'String', 'UM_CHANNEL', "\"$channel\""
+//                    dimension "default"
+//                }
+//                if (!environment.release) {
+//                    break
+//                }
+//            }
+//        }
+//    }
+
+    namespace = "com.kelin.environmenttoolsdemo"
+}
+
+
+dependencies {
+//    implementation (fileTree (dir = "libs", include = ["*.jar"]))
+//    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("com.android.support.test:runner:1.0.2")
+    androidTestImplementation("com.android.support.test.espresso:espresso-core:3.0.2")
+}

@@ -1,6 +1,7 @@
 package com.kelin.environment
 
 import com.kelin.environment.extension.EnvironmentExtension
+import com.kelin.environment.extension.TaskExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -19,9 +20,10 @@ import org.gradle.api.Project
  */
 class EnvironmentPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val envTask = project.tasks.create("environment", EnvironmentTask::class.java) {
-            it.online = true
-            it.initEnvironment = EnvType.RELEASE
+        val extension = project.extensions.create("environment", TaskExtension::class.java, project)
+        val envTask = project.tasks.create("environmentTask", EnvironmentTask::class.java) {
+            extension.online = true
+            extension.initEnvironment = EnvType.RELEASE
         }
         project.tasks.findByName("preBuild")?.dependsOn(envTask)//每当cleanTask执行之后就执行环境配置的Task
 
@@ -30,4 +32,9 @@ class EnvironmentPlugin : Plugin<Project> {
         project.extensions.create("testEnv", EnvironmentExtension::class.java)
         project.extensions.create("demoEnv", EnvironmentExtension::class.java)
     }
+}
+
+fun Project.environment(configure: TaskExtension.() -> Unit) {
+    val extension = extensions.getByType(TaskExtension::class.java)
+    extension.configure()
 }
