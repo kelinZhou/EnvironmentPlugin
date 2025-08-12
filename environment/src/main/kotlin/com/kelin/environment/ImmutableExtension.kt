@@ -1,7 +1,7 @@
 package com.kelin.environment
 
 /**
- * **描述:** 定义一个Extension可以设置变量。
+ * **描述:** 定义一个Extension可以设置常量。
  *
  * **创建人:** kelin
  *

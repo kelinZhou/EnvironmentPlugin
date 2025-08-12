@@ -110,9 +110,9 @@ android {
 
     signingConfigs {
         release {
-            keyAlias 'kelinZhou'
+            keyAlias 'stephen'
             keyPassword '881219'
-            storeFile file('../kelin.jks')
+            storeFile file('/Users/kelin/KeyStores/Android/StephenZhou.jks')
             storePassword '881219'
         }
     }
