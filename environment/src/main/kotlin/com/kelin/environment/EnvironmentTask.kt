@@ -5,6 +5,9 @@ import com.kelin.environment.extension.EnvironmentExtension
 import com.kelin.environment.extension.TaskExtension
 import com.kelin.environment.model.Version
 import com.kelin.environment.model.lessThan
+import com.kelin.environment.tools.green
+import com.kelin.environment.tools.purple
+import com.kelin.environment.tools.yellow
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.util.Locale
@@ -23,7 +26,7 @@ import java.util.Locale
  */
 open class EnvironmentTask : DefaultTask() {
 
-    private val envGenerators = ArrayList<GeneratedEnvConfig>()
+    private val envGenerators = ArrayList<EnvConfigGenerator>()
 
     private val environment by lazy { project.extensions.findByName("environment") as TaskExtension }
 
@@ -72,7 +75,7 @@ open class EnvironmentTask : DefaultTask() {
 
     @TaskAction
     fun publicEnvironment() {
-        println("\n==========☆★ Environment Plugin Beginning ★☆==========\n")
+        println("\n${"==========☆★ Environment Plugin Beginning ★☆==========".yellow()}\n")
         if (releaseExt.alias.isEmpty()) {
             releaseExt.alias = "Release"
         }
@@ -104,11 +107,11 @@ open class EnvironmentTask : DefaultTask() {
         println("Channel: ${channel.ifEmpty { "unknown" }}")
         println("BuildType: $type")
         if (defaultConfig != null || !app.isNullOrEmpty()) {
-            println("\n------Generate placeholder Beginning------\n")
+            println("\n${"------Generate ManifestPlaceholder Beginning------".purple()}\n")
             environment.manifestPlaceholders.forEach {
-                println("${it.key} : ${it.value}")
+                println("${it.key} : ${it.value}".green())
             }
-            println("\n------Generate placeholder End------\n")
+            println("\n${"---------Generate ManifestPlaceholder End---------".purple()}\n")
         }
         defaultConfig?.manifestPlaceholders?.putAll(environment.manifestPlaceholders)
         app?.all { variant ->
@@ -128,7 +131,7 @@ open class EnvironmentTask : DefaultTask() {
                     val packageName = environment.envPackage.ifBlank { environment.applicationId.ifBlank { variant.applicationId } }
                     println("BuildConfigPackageName:${packageName}")
                     envGenerators.add(
-                        GeneratedEnvConfig(
+                        EnvConfigGenerator(
                             srcOutputDir,
                             packageName,
                             environment.initEnvironment,
@@ -146,23 +149,25 @@ open class EnvironmentTask : DefaultTask() {
                     doLast {
                         envGenerators.forEach { it.generate() }
 
-                        println("Generated Constants:")
+                        println("Generated Constants:".yellow())
                         environment.innerConstants.forEach { c ->
-                            println("${c.key} : ${c.value}")
+                            println("${c.key} : ${c.value}".green())
                         }
 
-                        println("\nBaseVariables:")
+                        println("\nBaseVariables:".yellow())
                         environment.innerVariables.forEach { v ->
-                            println("${v.key} : ${v.value}")
+                            println("${v.key} : ${v.value}".green())
                         }
-                        println("\nPackageVariables:")
+                        println("\nPackageVariables:".yellow())
                         environment.curConfig.variables.forEach { v ->
-                            println("${v.key} : ${v.value}")
+                            println("${v.key} : ${v.value}".green())
                         }
-                        println("\nVersionInfo:")
-                        println("Code: ${versionCode.get()}")
-                        println("Name: ${versionName.get()}")
-                        println("\n==========☆★ Environment Plugin End ★☆==========\n")
+                        println("\nVersionInfo:".yellow())
+                        println("Code: ${versionCode.get()}".purple())
+                        println("Name: ${versionName.get()}".purple())
+                        println("\n${"==========☆★ Environment Plugin End ★☆==========".yellow()}\n")
+                        println("Environment Running Success!".green())
+                        println("\n")
                     }
                 }
             }

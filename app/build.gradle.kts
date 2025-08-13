@@ -1,10 +1,11 @@
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("com.kelin.environment")
 }
 
-val packageName : String = rootProject.extra["packageName"].toString()
+val packageName: String = rootProject.extra["packageName"].toString()
 
 environment {
     //当打生产包时将该参数改为true，那么所生成的EnvConfig类中就不会包含releaseEnv以外的内容，避免开发、测试等环境泄漏。
@@ -17,8 +18,8 @@ environment {
 
     variable("TEST_BASE_VARIABLE", "base")
 
-    constant("IS_CONSTANT", "true", "Boolean", true)
-    constant("IS_CONSTANT_VALUE", "false", "Boolean")
+    constant("IS_CONSTANT", value = true, placeholder = true)
+    constant("IS_CONSTANT_VALUE", false)
 
     //本次编译启用Flavor为CN的配置，Flavor的名字不区分大小写。
     enabledConfig = "CN"
@@ -58,7 +59,7 @@ environment {
         variable("WE_CHAT_APP_SECRET", "2e8044fbb66f158fcc19e3ccec16fd06")
         variable("QQ_APP_ID", "1110499891", true)
         variable("QQ_APP_KEY", "cmyrDyPBYXDudUtZ")
-        variable("HR_SDK_ENV", "4", "int")
+        variable("HR_SDK_ENV", 4)
 
 
         variable("TEST_BASE_VARIABLE", "base_R")
@@ -73,7 +74,7 @@ environment {
         variable("BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809")
         //定位API的路径
         variable("LOCATE_URL", "http://sit.tms.api.yuchuanglian.com:8020/api/v1/")
-        variable("HR_SDK_ENV", "1")
+        variable("HR_SDK_ENV", 1)
 
         variable("TEST_BASE_VARIABLE", "base_test")
     }
@@ -87,17 +88,17 @@ environment {
         variable("BANK_SDK_APP_SECRET", "d18d04ab-f433-4242-86f3-c40facf71809")
         //定位API的路径
         variable("LOCATE_URL", "http://uat.tms.api.yuchuanglian.com:8020/api/v1/")
-        variable("HR_SDK_ENV", "2")
+        variable("HR_SDK_ENV", 2)
 
         variable("TEST_BASE_VARIABLE", "base_demo")
     }
 }
 
 android {
-
     compileSdk = 34
     defaultConfig {
         versionCode = environment.versionCode
+//        versionName = name
         versionName = environment.versionName
         applicationId = environment.applicationId
         minSdk = 14
@@ -105,7 +106,7 @@ android {
 
         testInstrumentationRunner = "android.support.test.runner.AndroidJUnitRunner"
 
-        println("=========${environment.getVariable("API_BASE_URL")}")
+//        println("=========${environment.getVariable("API_BASE_URL")}")
 
         manifestPlaceholders.putAll(environment.manifestPlaceholders)
     }

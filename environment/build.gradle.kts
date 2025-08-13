@@ -33,7 +33,7 @@ dependencies {
     implementation(localGroovy())
 //    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation("com.android.tools.build:gradle:4.0.2")
-    implementation("com.squareup:javapoet:1.13.0")//用来生成java文件的，避免字符串拼接的尴尬
+    implementation("com.squareup:kotlinpoet:2.2.0")//用来生成kotlin代码文件的，避免字符串拼接的尴尬
 }
 
 gradlePlugin {

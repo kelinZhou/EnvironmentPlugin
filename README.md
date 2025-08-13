@@ -30,6 +30,91 @@ apply plugin: "com.kelin.environment"
 
 ## 更新记录
 
+### [2.0.0] - 2025-8-13
+#### Changed
+- 适配Kotlin DSL
+- 生成的环境代码由Java变更为Kotlin
+- EnvConfig.Type枚举内部类从EnvConfig移除，变为非内部类并改名为EnvType。
+- EnvConfig 默认实现 Environment接口，原来通过`EnvConfig.getEnv().xxxx`获取变量的方式可改用`EnvConfig.xxxx`的方式：
+```kotlin
+//1.x通过下面的方式获取当前环境的BASE_URL
+val baseUrl = EnvConfig.getEnv().BASE_URL
+
+//从2.x开始通过下面的方式获取当前环境的BASE_URL
+val baseUrl = EnvConfig.BASE_URL   //获取到的永远都是当前环境的BASE_URL
+//也可以通过下面的方式获取
+val baseUrl = EnfConfig.environment.BASE_URL  //等价于EnvConfig.BASE_URL
+```
+- 设置变量和常量时无需再手动设置类型，而是直接传入对应类型的值即可
+1.x使用下面的方式设置变量和常量
+```groovy
+constant "IS_FREE", "true", "Boolean"
+variable "API_BASE_URL", "https://api.mycompony.com"
+variable "MINIPTOGRAM_TYPE", '0', 'int'
+```
+2.x在kts中使用下面的方式设置变量和常量
+```kotlin
+constant("IS_FREE", true)
+variable("API_BASE_URL", "https://api.mycompony.com")
+variable("MINIPTOGRAM_TYPE", 0)
+```
+> **注意：** 无论是变量还是常量都仅支持`Number`、`Boolean`、`String`这三种类型。
+- 在gradle中获取当前环境变量和常量的方式略有变化，因为在设置时支持了泛型类型，那么获取时也同样支持泛型类型
+例如我们分别设置了一个常量和一个变量，如下：
+```kotlin
+constant("isFree", true)
+variable("appletEnvType", 3)
+```
+在1.x中我们需要用下面的方式获取然后再解析成对应的类型
+```groovy
+def isFree = Boolean.parseBoolean(environment.getConstant("isFree"))
+def appletEnvType = Integer.parseInt(environment.getVariable("appletEnvType"))
+```
+在2.x中我们可以直接通过泛型指定类型，如下：
+```kotlin
+//通过泛型指定类型
+val isFree = environment.getConstant<Boolean>("isFree")
+val appletEnvType = environment.getVariable<Int>("appletEnvType")
+
+//也可以自动类型推导
+if(environment.getConstant("isFree")){
+    //do something
+}
+val appletEnvType: Int = environment.getVariable("appletEnvType")
+```
+- EnvConfig.init(application)的初始化方法由`init`更名为`initial`，在2.x中的初始化代码如下：
+```kotlin
+class App : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+        EnvConfig.initial(this)
+    }
+}
+```
+
+- EnvConfig中`fun getEnv(): Environment`方法变更为`val environment: Environment`。
+- EnvConfig中`fun setEnvType(type: Type): Boolean`方法更名为`fun switchEnv(type: EnvType?): Boolean`
+
+#### Added
+- 在Gradle脚本中获取定义的环境变量时增加通过Kotlin委托的方式
+  例如我们分别设置了一个常量和一个变量，如下：
+```kotlin
+constant("isFree", true)
+variable("appletEnvType", 3)
+```
+正常情况下我们可以使用下面的方式在gradle脚本中获取，如下：
+```kotlin
+//通过泛型指定类型
+val isFree: Boolean = environment.getConstant("isFree")
+val appletEnvType: Int = environment.getVariable("appletEnvType")
+```
+除了上面的方式environment还提供了通过Kotlin委托的方式获取变量和常量：
+```kotlin
+val isFree: Boolean by environment.getConstant()
+val appletEnvType: Int by environment.getVariable()
+```
+
 ### [1.6.2] - 2024-11-6
 #### Removed
 - 移除releaseConfig发布环境配置，改用configs配置。

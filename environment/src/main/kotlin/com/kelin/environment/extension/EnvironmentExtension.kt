@@ -2,8 +2,10 @@ package com.kelin.environment.extension
 
 import com.kelin.environment.EnvValue
 import com.kelin.environment.VariableExtension
+import com.kelin.environment.tools.blue
+import com.kelin.environment.tools.green
+import com.kelin.environment.tools.yellow
 import org.gradle.api.tasks.Input
-import java.lang.reflect.Type
 
 /**
  * **描述:** 环境配置的基类。
@@ -26,22 +28,11 @@ open class EnvironmentExtension : VariableExtension {
     }
 
     internal fun getEnvironmentArgs(envName: String, allVariables: Map<String, EnvValue>): String {
-        println("$envName Environment:")
-        return allVariables.entries.joinToString(", ") { entry ->
-            val variable = variables[entry.key] ?: entry.value
-            println("${entry.key} | $variable  (${variable.placeholder})")
-            getValueByType(variable.value, entry.value.type)
-        }
-    }
-
-    private fun getValueByType(value: String, type: Type): String {
-        return when (String::class.java.typeName) {
-            type.typeName -> {
-                "\"${value}\""
-            }
-            else -> {
-                value
-            }
+        println("$envName Environment:".yellow())
+        return allVariables.entries.joinToString(", ") { (name, value) ->
+            val variable = variables[name] ?: value
+            println("${name.blue()} : manifestEnable = ${variable.placeholder} -> \n${variable.toString().green()}\n")
+            variable.typeValue
         }
     }
 

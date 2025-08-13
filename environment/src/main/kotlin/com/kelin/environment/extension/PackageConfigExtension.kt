@@ -41,7 +41,8 @@ open class PackageConfigExtension(val name: String) : VariableExtension {
         variables[name] = value
     }
 
-    fun getVariable(name: String): String? {
-        return variables[name]?.value
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getVariable(name: String): T? {
+        return variables[name]?.value as? T
     }
 }

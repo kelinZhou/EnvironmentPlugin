@@ -13,6 +13,6 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        EnvConfig.init(this)
+        EnvConfig.initial(this)
     }
 }

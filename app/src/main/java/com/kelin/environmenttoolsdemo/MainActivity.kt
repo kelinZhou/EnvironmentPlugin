@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.get
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,16 +19,22 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetTextI18n")
     private fun updateEnvValue() {
-        val env = EnvConfig.getEnv()
-        findViewById<TextView>(R.id.tvVariable).text =
-            env.javaClass.fields.joinToString("\n") { "${it.name}:${it.get(env)}" } + "\nApplicationId:${BuildConfig.APPLICATION_ID}" + "\nVersionName:${BuildConfig.VERSION_NAME}"
+        EnvConfig.environment.also { env -> //通过EnvConfig.environment获取当前的环境变量
+            //通过暴力反射获取所有的环境变量并拼接成字符串
+            val values = env.javaClass.declaredFields.onEach {
+                it.isAccessible = true
+            }.joinToString("\n") { "${it.name}:${it.get(env)}" } + "\nApplicationId:${BuildConfig.APPLICATION_ID}" + "\nVersionName:${BuildConfig.VERSION_NAME}"
+
+            //将获取到环境变量设置给TextView用于显示。
+            findViewById<TextView>(R.id.tvVariable).text = values
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         return if (!EnvConfig.IS_RELEASE) {
             menuInflater.inflate(R.menu.menu_switch, menu)
-            EnvConfig.Type.values().forEachIndexed { index, type ->
-                menu.getItem(index)?.apply {
+            EnvType.entries.forEachIndexed { index, type ->
+                menu[index].apply {
                     title = type.alias
                     isVisible = true
                 }
@@ -39,9 +46,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val type = EnvConfig.Type.values().find { it.alias == item.title }
-        if (type != null) {
-            val success = EnvConfig.setEnvType(type)
+        EnvType.entries.find { it.alias == item.title }?.also { type ->
+            val success = EnvConfig.switchEnv(type)
             if (success) {
                 updateEnvValue()
                 Toast.makeText(applicationContext, "已切换至${type.alias}环境", Toast.LENGTH_SHORT).show()

@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     extra.apply{
-        set("kotlin_version", "1.9.22")
+        set("kotlin_version", "2.2.0")
         set("packageName", "com.kelin.environmenttoolsdemo")
     }
 
@@ -27,7 +27,7 @@ buildscript {
     }
     dependencies {
         classpath ("org.jetbrains.kotlin:kotlin-gradle-plugin:${project.extra["kotlin_version"]}")
-        classpath ("com.kelin.environment:environment:2.0.0")
+        classpath ("com.kelin.environment:environment:2.0.0.4")
         classpath ("com.android.tools.build:gradle:8.2.1")
         classpath ("gradle.plugin.com.dorongold.plugins:task-tree:1.3")
         classpath ("com.novoda:bintray-release:0.5.0")
@@ -38,13 +38,4 @@ buildscript {
 
 tasks.register<Delete>("clean") {
     delete(rootProject.buildDir)
-}
-
-tasks{
-    withType<JavaCompile>{
-        targetCompatibility = "17"
-    }
-    withType<KotlinCompile>{
-        kotlinOptions.jvmTarget = "17"
-    }
 }

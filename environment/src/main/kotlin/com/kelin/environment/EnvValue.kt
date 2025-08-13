@@ -1,7 +1,10 @@
 package com.kelin.environment
 
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.asTypeName
 import java.io.Serializable
-import java.lang.reflect.Type
+import kotlin.reflect.KClass
+import kotlin.reflect.KType
 
 /**
  * **描述:** 环境变量。
@@ -12,15 +15,25 @@ import java.lang.reflect.Type
  *
  * **版本:** v 1.0.0
  */
-data class EnvValue(val value: String, var placeholder: Boolean, val type: Type) : Serializable {
+data class EnvValue(val value: Any, var placeholder: Boolean, private val type: KType) : Serializable {
 
-    val typedValue: String
-        get() = when (String::class.java.typeName) {
-            type.typeName -> {
-                "\"${value}\""
-            }
-            else -> {
-                value
-            }
+    val typeValue: String by lazy {
+        if (type.classifier == String::class) {
+            return@lazy "\"${value}\""
+        } else {
+            value.toString()
         }
+    }
+
+    val typeName: TypeName = type.asTypeName()
+
+    override fun toString(): String {
+        return "{ value: ${value}, placeholder: ${placeholder}, type: ${type.simpleName} }"
+    }
 }
+
+private val KType.simpleName: String
+    get() = when (val classifier = classifier) {
+        is KClass<*> -> classifier.simpleName ?: classifier.qualifiedName ?: "Unknown"
+        else -> classifier.toString()
+    }

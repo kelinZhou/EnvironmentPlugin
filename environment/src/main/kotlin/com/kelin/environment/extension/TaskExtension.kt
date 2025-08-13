@@ -3,6 +3,7 @@ package com.kelin.environment.extension
 import com.kelin.environment.EnvType
 import com.kelin.environment.EnvValue
 import com.kelin.environment.ImmutableExtension
+import com.kelin.environment.VariableDelegateProvider
 import com.kelin.environment.VariableExtension
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -201,21 +202,46 @@ open class TaskExtension(private val project: Project): VariableExtension, Immut
         innerVariables[name] = value
     }
 
-    fun getVariable(key: String): String {
-        return innerVariables[key]?.value ?: curConfig.getVariable(key)
-        ?: currentEnvVariables[key]?.value
-        ?: ""
+    @Suppress("UNCHECKED_CAST")
+    fun <T> getVariable(name: String): T {
+        return ((innerVariables[name]?.value as? T) ?: curConfig.getVariable(name)
+        ?: currentEnvVariables[name]?.value as? T)?: throw NullPointerException("Variable not found by name: $name in Environment.")
     }
 
-    fun isVariable(key: String, value: String): Boolean {
-        return getVariable(key) == value
+    /**
+     * 提供通过委托的方式获取变量。
+     */
+    fun<T> getVariable(): VariableDelegateProvider<T>{
+        return VariableDelegateProvider(this, true)
     }
 
-    fun getConstant(key: String): String {
-        return innerConstants[key]?.value ?: ""
+    /**
+     * 判断一个变量是否为某个值。
+     * @param name 变量的名字。
+     * @param value 用于判断指定名字的变量的值是否为该值。
+     */
+    fun<T> isVariable(name: String, value: T): Boolean {
+        return getVariable<T>(name) == value
     }
 
-    fun isConstant(key: String, value: String): Boolean {
-        return getConstant(key) == value
+    @Suppress("UNCHECKED_CAST")
+    fun<T> getConstant(name: String): T {
+        return (innerConstants[name]?.value as? T)?: throw NullPointerException("Constant not found by name: $name in Environment.")
+    }
+
+    /**
+     * 提供通过委托的方式获取常量。
+     */
+    fun<T> getConstant(): VariableDelegateProvider<T>{
+        return VariableDelegateProvider(this, false)
+    }
+
+    /**
+     * 判断一个常量是否为某个值。
+     * @param name 常量的名字。
+     * @param value 用于判断指定名字的常量的值是否为该值。
+     */
+    fun<T> isConstant(name: String, value: T): Boolean {
+        return getConstant<T>(name) == value
     }
 }
