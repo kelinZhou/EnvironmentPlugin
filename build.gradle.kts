@@ -27,7 +27,7 @@ buildscript {
     }
     dependencies {
         classpath ("org.jetbrains.kotlin:kotlin-gradle-plugin:${project.extra["kotlin_version"]}")
-        classpath ("com.kelin.environment:environment:2.0.0.4")
+        classpath ("com.kelin.environment:environment:2.0.0")
         classpath ("com.android.tools.build:gradle:8.2.1")
         classpath ("gradle.plugin.com.dorongold.plugins:task-tree:1.3")
         classpath ("com.novoda:bintray-release:0.5.0")
